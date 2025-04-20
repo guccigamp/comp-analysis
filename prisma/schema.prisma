@@ -36,8 +36,7 @@ model Activity {
 
 model Company {
   id           String    @id @default(uuid())
-  name         String    @unique
-  facility_id  String    @unique
+  name         String    
   legend_color String
   facility     Facilty[]
 
