@@ -1,8 +1,7 @@
-import prisma from "../prismaClient";
+import prisma from "../prisma";
 import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { hasSubscribers } from "diagnostics_channel";
 
 const router = express.Router();
 

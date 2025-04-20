@@ -1,0 +1,114 @@
+company,city,state,latitude,longitude,text,color
+Alleguard - Huntington,Grove City,OH,39.8821935,-83.0935377,"Alleguard - Huntington<br>Grove City, OH",#60D13B
+Alleguard - Huntington,Bastrop,TX,30.1104947,-97.3152701,"Alleguard - Huntington<br>Bastrop, TX",#60D13B
+Alleguard - Huntington,Cave Spring,GA,34.1075975,-85.33634339999999,"Alleguard - Huntington<br>Cave Spring, GA",#60D13B
+Cellofoam,Whiteland,IN,39.5500485,-86.0797079,"Cellofoam<br>Whiteland, IN",#EEC07E
+Cellofoam,Sallisaw,OK,35.4603711,-94.7874463,"Cellofoam<br>Sallisaw, OK",#EEC07E
+Cellofoam,Conyers,GA,33.6676103,-84.01769039999999,"Cellofoam<br>Conyers, GA",#EEC07E
+Cellofoam,Gainesville,GA,34.2978794,-83.8240663,"Cellofoam<br>Gainesville, GA",#EEC07E
+Cellofoam,Orlando,FL,28.5383832,-81.3789269,"Cellofoam<br>Orlando, FL",#EEC07E
+Cellofoam,Fredericksburg,VA,38.3031837,-77.4605399,"Cellofoam<br>Fredericksburg, VA",#EEC07E
+Cellofoam,Winchester,VA,39.1856597,-78.1633341,"Cellofoam<br>Winchester, VA",#EEC07E
+Modern Polymers,Cherryville,NC,35.3789361,-81.3795737,"Modern Polymers<br>Cherryville, NC",#B1E517
+EFP,Reno,NV,39.529919,-119.8142691,"EFP<br>Reno, NV",#15E7ED
+EFP,Casa Granda,AZ,32.9110027,-111.7733902,"EFP<br>Casa Granda, AZ",#15E7ED
+EFP,Evansville,IN,37.9715592,-87.5710898,"EFP<br>Evansville, IN",#15E7ED
+EFP,La vergne,TN,36.0156178,-86.5819394,"EFP<br>La vergne, TN",#15E7ED
+EFP,Decatur,AL,34.6059253,-86.9833417,"EFP<br>Decatur, AL",#15E7ED
+EFP,Bishopville,SC,34.2182107,-80.2484056,"EFP<br>Bishopville, SC",#15E7ED
+Aptco,McFarland,CA,35.6780104,-119.2292748,"Aptco<br>McFarland, CA",#39653D
+Tempo Precision Molded Foam,Visalia,CA,36.3301329,-119.2966367,"Tempo Precision Molded Foam<br>Visalia, CA",#FF5D70
+ACH Foam Technologies,McKinney,TX,33.1983388,-96.6389342,"ACH Foam Technologies<br>McKinney, TX",#E10E9D
+ACH Foam Technologies,Westminster,CO,39.8366528,-105.0372046,"ACH Foam Technologies<br>Westminster, CO",#E10E9D
+Atlas Molded Products,Sylmar,CA,34.2994874,-118.4588292,"Atlas Molded Products<br>Sylmar, CA",#1D869D
+Atlas Molded Products,Denver,CO,39.7392358,-104.990251,"Atlas Molded Products<br>Denver, CO",#1D869D
+Atlas Molded Products,Murray,UT,40.6668916,-111.8879909,"Atlas Molded Products<br>Murray, UT",#1D869D
+Atlas Molded Products,Reno,NV,39.529919,-119.8142691,"Atlas Molded Products<br>Reno, NV",#1D869D
+Atlas Molded Products,Kingman,AZ,35.189443,-114.0530065,"Atlas Molded Products<br>Kingman, AZ",#1D869D
+Atlas Molded Products,E Arlington,TX,32.735687,-97.1080656,"Atlas Molded Products<br>E Arlington, TX",#1D869D
+Atlas Molded Products,Byron Center,MI,42.8122508,-85.7228061,"Atlas Molded Products<br>Byron Center, MI",#1D869D
+Atlas Molded Products,Fond du Lac,WI,43.7730448,-88.4470508,"Atlas Molded Products<br>Fond du Lac, WI",#1D869D
+Atlas Molded Products,Fredericktown,MO,37.55977540000001,-90.2940069,"Atlas Molded Products<br>Fredericktown, MO",#1D869D
+Atlas Molded Products,Kansas City,KS,39.11553139999999,-94.6267873,"Atlas Molded Products<br>Kansas City, KS",#1D869D
+Atlas Molded Products,Perryville,MO,37.7242202,-89.8612196,"Atlas Molded Products<br>Perryville, MO",#1D869D
+Atlas Molded Products,Washington,IA,41.30140770000001,-91.6916417,"Atlas Molded Products<br>Washington, IA",#1D869D
+Atlas Molded Products,Gainesville,GA,34.2978794,-83.8240663,"Atlas Molded Products<br>Gainesville, GA",#1D869D
+Sonoco,Ridgeway,VA,36.5768046,-79.8583721,"Sonoco<br>Ridgeway, VA",#13FBB4
+Sonoco,Findlay,OH,41.0391283,-83.6502309,"Sonoco<br>Findlay, OH",#13FBB4
+Sonoco,Owosso,MI,42.9978049,-84.1766358,"Sonoco<br>Owosso, MI",#13FBB4
+Sonoco,Tullahoma,TN,35.3620235,-86.20943419999999,"Sonoco<br>Tullahoma, TN",#13FBB4
+Sonoco,Mt. Pleasant,TN,35.5342414,-87.20695409999999,"Sonoco<br>Mt. Pleasant, TN",#13FBB4
+Sonoco,Shelbyville,KY,38.2120144,-85.2235666,"Sonoco<br>Shelbyville, KY",#13FBB4
+Sonoco,Colorado Springs,CO,38.8338816,-104.8213634,"Sonoco<br>Colorado Springs, CO",#13FBB4
+Cold Keepers,Mcfarland,CA,35.6780104,-119.2292748,"Cold Keepers<br>Mcfarland, CA",#1B331B
+Styrotech,Thomasville,GA,30.8365815,-83.9787808,"Styrotech<br>Thomasville, GA",#8B8A30
+OpCO,Brooklyn Park,MN,45.0941315,-93.3563405,"OpCO<br>Brooklyn Park, MN",#FE7BEB
+Plastillite,Latrobe,PA,40.3211808,-79.37948109999999,"Plastillite<br>Latrobe, PA",#ABD37D
+Houston Foam Plastics,Omaha,NE,41.2565369,-95.9345034,"Houston Foam Plastics<br>Omaha, NE",#7BBE93
+Houston Foam Plastics,Houston,TX,29.7600771,-95.3701108,"Houston Foam Plastics<br>Houston, TX",#7BBE93
+Imperial Foam & Insulation,San Antonio,TX,29.4251905,-98.4945922,"Imperial Foam & Insulation<br>San Antonio, TX",#C17D18
+Marko Foam,Ormond Beach,FL,29.2858129,-81.0558894,"Marko Foam<br>Ormond Beach, FL",#5D69B8
+Marko Foam,Huntington Beach,CA,33.6594835,-117.9988026,"Marko Foam<br>Huntington Beach, CA",#5D69B8
+Michigan Foam,Salt Lake City,UT,40.7607793,-111.8910474,"Michigan Foam<br>Salt Lake City, UT",#531210
+Pal Pac,Wyoming,MI,42.9133602,-85.7053085,"Pal Pac<br>Wyoming, MI",#B77FF0
+Branch River Plastics,Ottawa,OH,41.0192185,-84.0471666,"Branch River Plastics<br>Ottawa, OH",#DE6496
+FMI-EPS,Smithfield,RI,41.9220496,-71.54951009999999,"FMI-EPS<br>Smithfield, RI",#F4C262
+Polar Central,Post Falls,ID,47.7179578,-116.9515856,"Polar Central<br>Post Falls, ID",#9877AB
+Mister Packaging,Prospect,CT,41.5023192,-72.9787163,"Mister Packaging<br>Prospect, CT",#AA54FF
+ThermaFoam,Anaheim,CA,33.8365932,-117.9143012,"ThermaFoam<br>Anaheim, CA",#54C7C9
+Robin II,Hillsboro,TX,32.0109886,-97.1300061,"Robin II<br>Hillsboro, TX",#9ACDBC
+Foam Pack Industries,Markesan,WI,43.7072047,-88.9901122,"Foam Pack Industries<br>Markesan, WI",#C2E2C6
+Clyde Tool & Die,Springfield,NJ,40.7016937,-74.3222146,"Clyde Tool & Die<br>Springfield, NJ",#4DDC4C
+DiversiFoam Products,Clyde,OH,41.30422009999999,-82.975192,"DiversiFoam Products<br>Clyde, OH",#A17F07
+Beaver Plastics,Rockford,MN,45.0872861,-93.7415093,"Beaver Plastics<br>Rockford, MN",#438466
+Aqua-Pak Industries Ltd,Watertown,SD,44.8994088,-97.1150732,"Aqua-Pak Industries Ltd<br>Watertown, SD",#289B3C
+Creative Packaging,Shelbyville,KY,38.2120144,-85.2235666,"Creative Packaging<br>Shelbyville, KY",#1CFD74
+Creative Packaging,Vineland,NJ,39.4863773,-75.02596369999999,"Creative Packaging<br>Vineland, NJ",#1CFD74
+Creative Packaging,Unadilla,GA,32.2617127,-83.7365798,"Creative Packaging<br>Unadilla, GA",#1CFD74
+Creative Packaging,Chicago,IL,41.8781136,-87.6297982,"Creative Packaging<br>Chicago, IL",#1CFD74
+Creative Packaging,Ft. Worth,TX,32.7554883,-97.3307658,"Creative Packaging<br>Ft. Worth, TX",#1CFD74
+Custom Pack,Phoenix,AZ,33.4483771,-112.0740373,"Custom Pack<br>Phoenix, AZ",#665858
+Insulated Products Corp (IPC),Eaton,PA,41.5114731,-75.96954649999999,"Insulated Products Corp (IPC)<br>Eaton, PA",#2A449F
+Magna LoBoy,Los Angeles,CA,34.0549076,-118.242643,"Magna LoBoy<br>Los Angeles, CA",#422976
+Speedling,Fort Walton,FL,30.42007079999999,-86.6170308,"Speedling<br>Fort Walton, FL",#5143D8
+Insulfoam LLC,Sun City,FL,27.678254,-82.4787384,"Insulfoam LLC<br>Sun City, FL",#ED18A7
+Insulfoam LLC,Tacoma,WA,47.2528768,-122.4442906,"Insulfoam LLC<br>Tacoma, WA",#ED18A7
+Insulfoam LLC,Anchorage,AK,61.2175758,-149.8996785,"Insulfoam LLC<br>Anchorage, AK",#ED18A7
+Insulfoam LLC,Kent,WA,47.3830671,-122.234771,"Insulfoam LLC<br>Kent, WA",#ED18A7
+Insulfoam LLC,Dixon,CA,38.4454641,-121.8232958,"Insulfoam LLC<br>Dixon, CA",#ED18A7
+Insulfoam LLC,Chino,CA,34.0122346,-117.688944,"Insulfoam LLC<br>Chino, CA",#ED18A7
+Insulfoam LLC,Salt Lake City,UT,40.7607793,-111.8910474,"Insulfoam LLC<br>Salt Lake City, UT",#ED18A7
+Insulfoam LLC,Phoenix,AZ,33.4483771,-112.0740373,"Insulfoam LLC<br>Phoenix, AZ",#ED18A7
+Insulfoam LLC,Aurora,CO,39.7294319,-104.8319195,"Insulfoam LLC<br>Aurora, CO",#ED18A7
+Insulfoam LLC,Mead,NE,41.2286493,-96.489212,"Insulfoam LLC<br>Mead, NE",#ED18A7
+Insulfoam LLC,Lakeland,FL,28.0394654,-81.9498042,"Insulfoam LLC<br>Lakeland, FL",#ED18A7
+Alleguard - Huntington,Greer,SC,34.9387279,-82.2270568,"Alleguard - Huntington<br>Greer, SC",#60D13B
+Alleguard - Huntington,Greenville,MI,43.1775314,-85.2527987,"Alleguard - Huntington<br>Greenville, MI",#60D13B
+Alleguard - Huntington,Radford,VA,37.13179239999999,-80.5764477,"Alleguard - Huntington<br>Radford, VA",#60D13B
+Alleguard - Huntington,West Brookfield,MA,42.2353463,-72.14116419999999,"Alleguard - Huntington<br>West Brookfield, MA",#60D13B
+Alleguard - Huntington,Monticello,AR,33.6296702,-91.8021856,"Alleguard - Huntington<br>Monticello, AR",#60D13B
+Armstrong Brands,Buffalo,NY,42.88644679999999,-78.8783689,"Armstrong Brands<br>Buffalo, NY",#1C30F8
+EFP,Elkhart,IN,41.6873832,-85.973517,"EFP<br>Elkhart, IN",#15E7ED
+Altor Solutions,Northbridge,MA,42.145,-71.652,"Altor Solutions<br>Northbridge, MA",#942AAE
+Altor Solutions,Bloomsburg,PA,41.0037,-76.4541,"Altor Solutions<br>Bloomsburg, PA",#942AAE
+Altor Solutions,Anderson,SC,34.5034,-82.6501,"Altor Solutions<br>Anderson, SC",#942AAE
+Altor Solutions,Jefferson,GA,34.1176,-83.5724,"Altor Solutions<br>Jefferson, GA",#942AAE
+Altor Solutions,Gnadenhutten,OH,40.3584,-81.4401,"Altor Solutions<br>Gnadenhutten, OH",#942AAE
+Altor Solutions,New Albany,IN,38.2856,-85.8241,"Altor Solutions<br>New Albany, IN",#942AAE
+Altor Solutions,Jackson,TN,35.6145,-88.8139,"Altor Solutions<br>Jackson, TN",#942AAE
+Altor Solutions,Plymouth,WI,43.7472,-87.9779,"Altor Solutions<br>Plymouth, WI",#942AAE
+Altor Solutions,Fort Madison,IA,40.6292,-91.3143,"Altor Solutions<br>Fort Madison, IA",#942AAE
+Altor Solutions,El Dorado Springs,MO,37.8762,-94.0184,"Altor Solutions<br>El Dorado Springs, MO",#942AAE
+Altor Solutions,Keller,TX,32.9343,-97.251,"Altor Solutions<br>Keller, TX",#942AAE
+Altor Solutions,Modesto,CA,37.6391,-120.9969,"Altor Solutions<br>Modesto, CA",#942AAE
+Altor Solutions,Compton,CA,33.8958,-118.2207,"Altor Solutions<br>Compton, CA",#942AAE
+Altor Solutions,St. Louis,MO,38.627,-90.1994,"Altor Solutions<br>St. Louis, MO",#942AAE
+Altor Solutions,St. Rosa Jaurequi (Queretaro),Queretaro,20.6786,-100.4226,"Altor Solutions<br>St. Rosa Jaurequi (Queretaro), Queretaro",#942AAE
+Altor Solutions,St. Rosa Jaurequi (Baja California),BC,32.5027,-117.0037,"Altor Solutions<br>St. Rosa Jaurequi (Baja California), BC",#942AAE
+Altor Solutions,Belcamp,MD,39.4732,-76.2324,"Altor Solutions<br>Belcamp, MD",#942AAE
+Altor Solutions,Rome,GA,34.257,-85.1647,"Altor Solutions<br>Rome, GA",#942AAE
+Altor Solutions,North Andover,MA,42.6987,-71.1351,"Altor Solutions<br>North Andover, MA",#942AAE
+Altor Solutions,St. Petersburg,FL,27.7704,-82.6793,"Altor Solutions<br>St. Petersburg, FL",#942AAE
+Altor Solutions,Waxahachie,TX,32.3865,-96.8483,"Altor Solutions<br>Waxahachie, TX",#942AAE
+Altor Solutions,Vernon,CA,34.0039,-118.2302,"Altor Solutions<br>Vernon, CA",#942AAE
+Altor Solutions,Huntington Beach,CA,33.6595,-117.9988,"Altor Solutions<br>Huntington Beach, CA",#942AAE

@@ -2,7 +2,7 @@ import express from "express"
 import path, {dirname} from "path"
 import { fileURLToPath } from "url"
 import companyRoutes from "./Routes/company"
-import authRoutes from "./Routes/auth"
+import authRoutes from "./routes/auth"
 import authMiddleware from "./Middleware/authMiddleware"
 
 const app = express()
