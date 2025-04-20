@@ -1,7 +1,7 @@
 import express from "express"
 import path, {dirname} from "path"
 import { fileURLToPath } from "url"
-import appRoutes from "./Routes/company"
+import companyRoutes from "./Routes/company"
 import authRoutes from "./Routes/auth"
 import authMiddleware from "./Middleware/authMiddleware"
 
@@ -28,7 +28,7 @@ app.get('/', (_, res) => {
 
 // Routes
 app.use('/auth', authRoutes)
-app.use('/api', authMiddleware, appRoutes)
+app.use('/api', authMiddleware, companyRoutes)
 
 
 app.listen(PORT, () => {
