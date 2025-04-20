@@ -2,6 +2,4 @@ node_modules
 # Keep environment variables out of version control
 .env
 .vscode/settings.json
-prisma/src/db.sqlite
-prisma/src/db.sqlite-journal
 src/companies_locations.csv
