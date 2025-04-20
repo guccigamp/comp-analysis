@@ -1,0 +1,8 @@
+node_modules
+# Keep environment variables out of version control
+.env
+package-lock.json
+.vscode/settings.json
+prisma/src/db.sqlite
+prisma/src/db.sqlite-journal
+src/companies_locations.csv

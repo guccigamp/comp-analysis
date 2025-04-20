@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(uuid())
+  employeeId String?    @unique
+  email      String     @unique
+  password   String
+  first_name String?
+  last_name  String?
+  last_login DateTime?  @default(now())
+  status     Status     @default(ACTIVE)
+  Activities Activity[]
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  userId    String
+  action    Action
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Company {
+  id           String    @id @default(uuid())
+  name         String    @unique
+  facility_id  String    @unique
+  legend_color String
+  facility     Facilty[]
+
+  @@index([name])
+}
+
+model Facilty {
+  id        String  @id @default(uuid())
+  latitude  Float
+  longitude Float
+  address   String
+  city      String
+  state     String
+  zip       String
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  @@index([state])
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum Action {
+  LOGIN
+  REGISTER
+  VIEW_ALL
+  CREATE
+  UPDATE
+  DELETE
+}
