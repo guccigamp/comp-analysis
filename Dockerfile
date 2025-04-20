@@ -11,8 +11,8 @@ RUN npm install
 # Copy Prisma schema and database
 COPY prisma ./prisma/
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client and run the first migration
+RUN npx prisma generate --schema ./prisma/schema.prisma && npx prisma migrate dev --name init
 
 # Copy application code
 COPY . .
