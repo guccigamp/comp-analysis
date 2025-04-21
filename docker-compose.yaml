@@ -1,7 +1,13 @@
 services:
   app:
     build: .
+    environment:
+      - DATABASE_URL="file:./dev.db"
+      - PORT=8000
+      - JWT_SECRET_KEY="crime master gogo"
+      - MAPS_API_KEY="AIzaSyDPHBVn7oxPYyyIdK8b-YW3djfl5_UoyHE"
+      - GEOCODING_API_KEY="AIzaSyDPHBVn7oxPYyyIdK8b-YW3djfl5_UoyHE"
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    volumes:
+    - .:/app
