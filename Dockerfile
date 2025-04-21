@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 8000
 
 # Start the app
-CMD ["node", "src/app.js"]
+CMD ["npm", "start"]

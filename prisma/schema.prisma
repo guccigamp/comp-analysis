@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -25,7 +25,7 @@ model User {
 model Activity {
   id        String   @id @default(uuid())
   userId    String
-  action    Action
+  action    String
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 }
@@ -54,13 +54,4 @@ model Facilty {
 enum Status {
   ACTIVE
   INACTIVE
-}
-
-enum Action {
-  LOGIN
-  REGISTER
-  VIEW_ALL
-  CREATE
-  UPDATE
-  DELETE
 }

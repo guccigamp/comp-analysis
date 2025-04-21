@@ -1,4 +1,4 @@
-import prisma from "../prisma";
+import prisma from "../prisma.js";
 import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -24,19 +24,19 @@ router.post("/register", async (req, res) => {
                 employeeId,
                 first_name,
                 last_name,
-            },
+            }
         });
         // Loggging the Registeration 
         await prisma.activity.create({
             data: {
                 userId: user.id,
-                action: "REGISTER",
-            },
+                action: `User registered at ${new Date()}`,
+            }
         });
 
         // Creating a token for user
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, {
-            expiresIn: "24h",
+            expiresIn: "24h"
         });
         res.json({ token });
     } catch (error) {
@@ -65,20 +65,21 @@ router.post("/login", async (req, res) => {
 
         // Validating password
         const isPasswordValid = bcrypt.compareSync(password, user.password);
+
         if (!isPasswordValid) {
-            return res.status(404).send({ message: "Password invalid" });
+            return res.status(401).send({ message: "Password invalid" });
         };
 
         // Logging the Login
         await prisma.activity.create({
             data: {
                 userId: user.id,
-                action: "LOGIN",
-            },
+                action: `User Logged In at ${new Date()}`,
+            }
         });
 
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, {
-            expiresIn: "24h",
+            expiresIn: "24h"
         });
         res.json({ token });
     } catch (error) {

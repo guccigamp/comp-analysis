@@ -1,9 +1,10 @@
 import express from "express"
 import path, {dirname} from "path"
 import { fileURLToPath } from "url"
-import companyRoutes from "./Routes/company"
-import authRoutes from "./routes/auth"
-import authMiddleware from "./Middleware/authMiddleware"
+import companyRoutes from "./routes/company.js"
+import facilityRoutes from "./routes/facility.js"
+import authRoutes from "./routes/auth.js"
+import authMiddleware from "./middleware/authMiddleware.js"
 
 const app = express()
 
@@ -20,15 +21,13 @@ const __dirname = dirname(dirname(__filename))
 app.use(express.static(path.join(__dirname, '../public')))
 // Allowing express to return json responses
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 
-// Serving up the HTML file from the current directory
-app.get('/', (_, res) => {
-    res.sendFile(path.join(__dirname, '', 'index.html'))
-})
 
 // Routes
 app.use('/auth', authRoutes)
 app.use('/api', authMiddleware, companyRoutes)
+app.use('/api', authMiddleware, facilityRoutes)
 
 
 app.listen(PORT, () => {
