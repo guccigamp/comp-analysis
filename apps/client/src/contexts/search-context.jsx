@@ -120,62 +120,168 @@ const COMPANY_CATEGORIES = {
   },
 }
 
-export function SearchProvider({ children }) {
-  const [facilities, setFacilities] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+export function SearchProvider({ children, allFacilities }) {
+  const [filters, setFilters] = useState(initialFilters)
 
-  const searchNearby = useCallback(async (lat, lng, radius = 50) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const { data } = await facilityApi.getFacilitiesNearby(lat, lng, radius)
-      setFacilities(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+  // Memoize the updateFilters function to prevent unnecessary re-renders
+  const updateFilters = useCallback((newFilters) => {
+    setFilters((prev) => {
+      // Only update if there are actual changes
+      const updatedFilters = { ...prev, ...newFilters }
+
+      // Check if proximity is being updated
+      if (newFilters.proximity) {
+        updatedFilters.proximity = { ...prev.proximity, ...newFilters.proximity }
+      }
+
+      // Check if advanced filters are being updated
+      if (newFilters.advanced) {
+        updatedFilters.advanced = { ...prev.advanced, ...newFilters.advanced }
+      }
+
+      // Deep comparison to prevent unnecessary updates
+      if (JSON.stringify(prev) === JSON.stringify(updatedFilters)) {
+        return prev // No changes, return the previous state
+      }
+
+      return updatedFilters
+    })
   }, [])
 
-  const searchByState = useCallback(async (state) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const { data } = await facilityApi.getFacilitiesByState(state)
-      setFacilities(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+  // Memoize the clearFilters function
+  const clearFilters = useCallback(() => {
+    setFilters(initialFilters)
   }, [])
 
-  const searchByFilters = useCallback(async (filters) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const { data } = await facilityApi.getFilteredFacilities(filters)
-      setFacilities(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  // Memoized filtered facilities for better performance
+  const filteredFacilities = useMemo(() => {
+    return allFacilities.filter((facility) => {
+      // Search term filter
+      if (filters.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase()
+        const city = extractCityFromAddress(facility.address)
+        const matchesSearch =
+          facility.companyName.toLowerCase().includes(searchLower) ||
+          facility.address.toLowerCase().includes(searchLower) ||
+          facility.state.toLowerCase().includes(searchLower) ||
+          city.toLowerCase().includes(searchLower)
 
-  const value = {
-    facilities,
-    loading,
-    error,
-    searchNearby,
-    searchByState,
-    searchByFilters,
-  }
+        if (!matchesSearch) return false
+      }
 
-  return (
-    <SearchContext.Provider value={value}>
-      {children}
-    </SearchContext.Provider>
+      // Company filter (from main search)
+      if (filters.selectedCompanies.length > 0 && !filters.selectedCompanies.includes(facility.companyId)) {
+        return false
+      }
+
+      // State filter (from main search)
+      if (filters.selectedStates.length > 0 && !filters.selectedStates.includes(facility.state)) {
+        return false
+      }
+
+      // City filter
+      if (filters.selectedCities.length > 0) {
+        const city = extractCityFromAddress(facility.address)
+        if (!filters.selectedCities.includes(city)) {
+          return false
+        }
+      }
+
+      // Proximity filter
+      if (filters.proximity.enabled && filters.proximity.center) {
+        const distance = calculateDistance(filters.proximity.center, {
+          latitude: facility.latitude,
+          longitude: facility.longitude,
+        })
+
+        const radiusInMiles =
+          filters.proximity.unit === "kilometers" ? filters.proximity.radius * 0.621371 : filters.proximity.radius
+
+        if (distance > radiusInMiles) {
+          return false
+        }
+      }
+
+      // Advanced filters
+      if (filters.advanced) {
+        // Advanced region/state filters
+        const hasAdvancedRegionFilters =
+          filters.advanced.selectedRegions.length > 0 || filters.advanced.selectedStates.length > 0
+
+        if (hasAdvancedRegionFilters) {
+          let matchesAdvancedRegionFilter = false
+
+          // Define regions for filtering
+          const US_REGIONS = {
+            northeast: {
+              states: ["ME", "NH", "VT", "MA", "RI", "CT", "NY", "NJ", "PA"],
+            },
+            southeast: {
+              states: ["DE", "MD", "DC", "VA", "WV", "KY", "TN", "NC", "SC", "GA", "FL", "AL", "MS", "AR", "LA"],
+            },
+            midwest: {
+              states: ["OH", "MI", "IN", "WI", "IL", "MN", "IA", "MO", "ND", "SD", "NE", "KS"],
+            },
+            southwest: {
+              states: ["TX", "OK", "NM", "AZ"],
+            },
+            west: {
+              states: ["MT", "WY", "CO", "UT", "ID", "WA", "OR", "NV", "CA", "AK", "HI"],
+            },
+            international: {
+              states: ["Qro.", "B.C."],
+            },
+          }
+
+          // Check if facility state matches selected regions
+          if (filters.advanced.selectedRegions.length > 0) {
+            const facilityInSelectedRegion = filters.advanced.selectedRegions.some((regionKey) => {
+              const region = US_REGIONS[regionKey]
+              return region && region.states.includes(facility.state)
+            })
+            if (facilityInSelectedRegion) {
+              matchesAdvancedRegionFilter = true
+            }
+          }
+
+          // Check if facility state matches individually selected states
+          if (filters.advanced.selectedStates.length > 0) {
+            if (filters.advanced.selectedStates.includes(facility.state)) {
+              matchesAdvancedRegionFilter = true
+            }
+          }
+
+          if (!matchesAdvancedRegionFilter) {
+            return false
+          }
+        }
+
+        // Advanced company filters
+        if (filters.advanced.selectedCompanies.length > 0) {
+          if (!filters.advanced.selectedCompanies.includes(facility.companyId)) {
+            return false
+          }
+        }
+      }
+
+      return true
+    })
+  }, [allFacilities, filters])
+
+  // Memoize the total results
+  const totalResults = useMemo(() => filteredFacilities.length, [filteredFacilities])
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      filters,
+      filteredFacilities,
+      updateFilters,
+      clearFilters,
+      totalResults,
+    }),
+    [filters, filteredFacilities, updateFilters, clearFilters, totalResults],
   )
+
+  return <SearchContext.Provider value={contextValue}>{children}</SearchContext.Provider>
 }
