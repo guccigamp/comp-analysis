@@ -6,13 +6,14 @@ import {
     updateCompany,
     deleteCompany,
 } from "../controllers/companyController.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", getAllCompanies);
-router.get("/:id", getCompanyById);
-router.post("/", createCompany);
-router.put("/:id", updateCompany);
-router.delete("/:id", deleteCompany);
+router.get("/", protect, getAllCompanies);
+router.get("/:id", protect, getCompanyById);
+router.post("/", protect, adminOnly, createCompany);
+router.put("/:id", protect, adminOnly, updateCompany);
+router.delete("/:id", protect, adminOnly, deleteCompany);
 
 export default router;

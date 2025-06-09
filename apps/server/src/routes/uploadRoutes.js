@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import uploadCSV from "../controllers/uploadController.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -23,6 +24,6 @@ const upload = multer({
 });
 
 // POST /api/upload/csv - Upload CSV file with company and facility data
-router.post("/csv", upload.single("file"), uploadCSV);
+router.post("/csv", protect, adminOnly, upload.single("file"), uploadCSV);
 
 export default router;

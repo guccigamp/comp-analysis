@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import routes from "./routes/index.js";
@@ -17,7 +16,6 @@ app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(morgan("dev")); // HTTP request logger
 
-// API Routes
 app.use("/api", routes);
 app.use("/health", async (req, res) => {
     res.send({ message: "API is up" });

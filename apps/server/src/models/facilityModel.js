@@ -11,19 +11,6 @@ const pointSchema = new mongoose.Schema({
     coordinates: {
         type: [Number], // [longitude, latitude]
         required: true,
-        validate: {
-            validator: (coordinates) => {
-                return (
-                    coordinates.length === 2 &&
-                    coordinates[0] >= -180 &&
-                    coordinates[0] <= 180 && // longitude
-                    coordinates[1] >= -90 &&
-                    coordinates[1] <= 90
-                ); // latitude
-            },
-            message:
-                "Coordinates must be [longitude, latitude] with valid ranges",
-        },
     },
 });
 

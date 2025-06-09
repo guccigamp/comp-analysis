@@ -1,5 +1,6 @@
 import Facility from "../models/facilityModel.js";
 import Company from "../models/companyModel.js";
+import geocoder from "../services/geocodingService.js";
 
 // Get all facilities
 export const getAllFacilities = async (req, res, next) => {
@@ -36,7 +37,39 @@ export const getFacilityById = async (req, res, next) => {
 // Create new facility
 export const createFacility = async (req, res, next) => {
     try {
-        const { latitude, longitude, companyId, ...facilityData } = req.body;
+        let {
+            latitude,
+            longitude,
+            companyId,
+            address,
+            state,
+            city,
+            name,
+            zipCode,
+            ...facilityData
+        } = req.body;
+
+        // Geocode address to get coordinates
+        if (!latitude && !longitude && address) {
+            const locationData = await geocoder.geocodeAddress(address);
+            longitude = locationData.coordinates[0];
+            latitude = locationData.coordinates[1];
+            console.log({ longitude, latitude });
+        } else if (!address) {
+            const locationData = await geocoder.reverseGeocode(
+                latitude,
+                longitude
+            );
+            address = locationData.address;
+            city = locationData.city;
+            state = locationData.state;
+            zipCode = locationData.zipCode;
+            console.log({ address, city, state, zipCode });
+        }
+        // Create a name if not given
+        if (!name) {
+            name = `${city}, ${state}`;
+        }
 
         // Check if company exists
         const company = await Company.findById(companyId);
@@ -46,6 +79,11 @@ export const createFacility = async (req, res, next) => {
 
         const facility = new Facility({
             ...facilityData,
+            address,
+            name,
+            city,
+            state,
+            zipCode,
             companyId,
             location: {
                 type: "Point",
@@ -177,7 +215,6 @@ export const getFilteredFacilities = async (req, res, next) => {
         const {
             companies,
             states,
-            regions,
             searchTerm,
             latitude,
             longitude,

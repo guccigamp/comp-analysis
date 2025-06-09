@@ -1,6 +1,4 @@
 node_modules
-# Keep environment variables out of version control
+
 .env
-.vscode/settings.json
-public/companies_locations.csv
-docker-compose.yaml
+
