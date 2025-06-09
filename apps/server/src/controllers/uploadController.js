@@ -27,10 +27,16 @@ const uploadCSV = async (req, res) => {
         const csvData = [];
         const stream = Readable.from(req.file.buffer);
 
-        // Parse CSV data
+        // Parse CSV data with comma delimiter
         await new Promise((resolve, reject) => {
             stream
-                .pipe(csv())
+                .pipe(
+                    csv({
+                        separator: ",", // Explicitly set comma as delimiter
+                        skipLines: 0,
+                        headers: true,
+                    })
+                )
                 .on("data", (row) => {
                     // Normalize column names (remove spaces, convert to lowercase)
                     const normalizedRow = {};
@@ -39,9 +45,21 @@ const uploadCSV = async (req, res) => {
                             .toLowerCase()
                             .replace(/\s+/g, "_")
                             .replace(/[^a-z0-9_]/g, "");
-                        normalizedRow[normalizedKey] = row[key]
-                            ? row[key].trim()
-                            : "";
+
+                        // Special handling for tags field
+                        if (normalizedKey === "tags") {
+                            // Split tags by comma and trim each tag
+                            normalizedRow[normalizedKey] = row[key]
+                                ? row[key]
+                                      .split(",")
+                                      .map((tag) => tag.trim())
+                                      .filter((tag) => tag.length > 0)
+                                : [];
+                        } else {
+                            normalizedRow[normalizedKey] = row[key]
+                                ? row[key].trim()
+                                : "";
+                        }
                     });
                     csvData.push(normalizedRow);
                 })
@@ -172,6 +190,7 @@ const uploadCSV = async (req, res) => {
                     state: locationData.state || "",
                     zipCode: locationData.zipCode || "",
                     coordinates: locationData.coordinates,
+                    tags: row.tags || [], // Include tags in processed data
                     originalRow: rowNumber,
                 });
 

@@ -2,3 +2,13 @@ node_modules
 
 .env
 
+.vscode/settings.json
+apps/.DS_Store
+.DS_Store
+client.zip
+Dummy Report.pdf
+Insomnia_2025-05-31.yaml
+Insomnia_2025-06-01.har
+Insomnia_2025-06-01.yaml
+apps/.DS_Store
+.DS_Store

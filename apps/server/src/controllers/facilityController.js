@@ -1,6 +1,10 @@
 import Facility from "../models/facilityModel.js";
 import Company from "../models/companyModel.js";
 import geocoder from "../services/geocodingService.js";
+import {
+    filterFacilitiesByTags,
+    removeDuplicateTags,
+} from "../utils/tagHelpers.js";
 
 // Get all facilities
 export const getAllFacilities = async (req, res, next) => {
@@ -46,8 +50,14 @@ export const createFacility = async (req, res, next) => {
             city,
             name,
             zipCode,
+            tags,
             ...facilityData
         } = req.body;
+
+        // Process tags if provided
+        if (tags) {
+            tags = removeDuplicateTags(Array.isArray(tags) ? tags : [tags]);
+        }
 
         // Geocode address to get coordinates
         if (!latitude && !longitude && address) {
@@ -85,6 +95,7 @@ export const createFacility = async (req, res, next) => {
             state,
             zipCode,
             companyId,
+            tags,
             location: {
                 type: "Point",
                 coordinates: [longitude, latitude], // GeoJSON uses [longitude, latitude]
@@ -101,7 +112,14 @@ export const createFacility = async (req, res, next) => {
 // Update facility
 export const updateFacility = async (req, res, next) => {
     try {
-        const { latitude, longitude, ...updateData } = req.body;
+        const { latitude, longitude, tags, ...updateData } = req.body;
+
+        // Process tags if provided
+        if (tags) {
+            updateData.tags = removeDuplicateTags(
+                Array.isArray(tags) ? tags : [tags]
+            );
+        }
 
         // Update location if coordinates are provided
         if (latitude !== undefined && longitude !== undefined) {
@@ -209,74 +227,116 @@ export const findFacilitiesByCompany = async (req, res, next) => {
     }
 };
 
-// Get facilities with advanced filtering
+// Get filtered facilities
 export const getFilteredFacilities = async (req, res, next) => {
     try {
         const {
-            companies,
-            states,
-            searchTerm,
+            companyId,
+            state,
+            city,
+            tags,
+            matchAllTags = false,
+            radius,
             latitude,
             longitude,
-            radius,
-            unit,
+            unit = "miles",
         } = req.query;
 
-        // Build query
-        const query = { active: true };
+        // Build base query
+        let query = { active: true };
 
-        // Filter by companies
-        if (companies) {
-            const companyIds = companies.split(",");
-            query.companyId = { $in: companyIds };
+        // Add company filter
+        if (companyId) {
+            query.companyId = companyId;
         }
 
-        // Filter by states
-        if (states) {
-            const stateList = states.split(",");
-            query.state = { $in: stateList };
+        // Add state filter
+        if (state) {
+            query.state = { $regex: new RegExp(state, "i") };
         }
 
-        // Filter by search term
-        if (searchTerm) {
-            const searchRegex = new RegExp(searchTerm, "i");
-            query.$or = [
-                { address: searchRegex },
-                { state: searchRegex },
-                { city: searchRegex },
-            ];
+        // Add city filter
+        if (city) {
+            query.city = { $regex: new RegExp(city, "i") };
         }
 
-        // Filter by proximity if coordinates are provided
-        let facilities;
-
-        if (latitude && longitude && radius) {
+        // Add geospatial query if coordinates and radius are provided
+        if (radius && latitude && longitude) {
             const radiusInMeters =
-                unit === "kilometers"
-                    ? parseFloat(radius) * 1000
-                    : parseFloat(radius) * 1609.34;
-
-            facilities = await Facility.find({
-                ...query,
-                location: {
-                    $nearSphere: {
-                        $geometry: {
-                            type: "Point",
-                            coordinates: [
-                                parseFloat(longitude),
-                                parseFloat(latitude),
-                            ],
-                        },
-                        $maxDistance: radiusInMeters,
+                unit === "kilometers" ? radius * 1000 : radius * 1609.34;
+            query.location = {
+                $nearSphere: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [
+                            parseFloat(longitude),
+                            parseFloat(latitude),
+                        ],
                     },
+                    $maxDistance: radiusInMeters,
                 },
-            }).populate("companyId", "name legend_color");
-        } else {
-            facilities = await Facility.find(query).populate(
-                "companyId",
-                "name legend_color"
+            };
+        }
+
+        // Get facilities from database
+        let facilities = await Facility.find(query).populate(
+            "companyId",
+            "name legend_color"
+        );
+
+        // Apply tag filtering if tags are provided
+        if (tags) {
+            const tagArray = Array.isArray(tags) ? tags : [tags];
+            facilities = filterFacilitiesByTags(
+                facilities,
+                tagArray,
+                matchAllTags === "true"
             );
         }
+
+        res.status(200).json(facilities);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get all unique tags
+export const getAllTags = async (req, res, next) => {
+    try {
+        const facilities = await Facility.find({ active: true });
+        const { tagCounts } = getTagStatistics(facilities);
+
+        // Convert to array of { tag, count } objects and sort by count
+        const tags = Object.entries(tagCounts)
+            .map(([tag, count]) => ({ tag, count }))
+            .sort((a, b) => b.count - a.count);
+
+        res.status(200).json(tags);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get facilities by tag
+export const getFacilitiesByTag = async (req, res, next) => {
+    try {
+        const { tag } = req.params;
+        const { companyId } = req.query;
+
+        let query = {
+            active: true,
+            tags: { $regex: new RegExp(tag, "i") },
+        };
+
+        // Filter by company if provided
+        if (companyId) {
+            query.companyId = companyId;
+        }
+
+        const facilities = await Facility.find(query).populate(
+            "companyId",
+            "name legend_color"
+        );
 
         res.status(200).json(facilities);
     } catch (error) {

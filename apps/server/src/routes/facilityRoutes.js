@@ -9,11 +9,18 @@ import {
     findFacilitiesByState,
     findFacilitiesByCompany,
     getFilteredFacilities,
+    getAllTags,
+    getFacilitiesByTag,
 } from "../controllers/facilityController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+// Tag-related routes
+router.get("/tags", protect, getAllTags);
+router.get("/tags/:tag", protect, getFacilitiesByTag);
+
+// Existing routes
 router.get("/", protect, getAllFacilities);
 router.get("/filter", protect, getFilteredFacilities);
 router.get("/nearby", protect, findFacilitiesNearby);

@@ -80,6 +80,10 @@ const facilitySchema = new mongoose.Schema(
             required: [true, "Location coordinates are required"],
             index: "2dsphere", // Create a geospatial index
         },
+        tags: {
+            type: [String],
+            default: [],
+        },
         active: {
             type: Boolean,
             default: true,

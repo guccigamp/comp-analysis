@@ -10,16 +10,32 @@ class TemplateController {
      * Generate and serve a sample address-based CSV template
      */
     getSampleAddressTemplate(req, res) {
-        const headers = ["company_name", "legend_color", "address"];
+        const headers = ["company_name", "legend_color", "address", "tags"];
         const sampleData = [
             [
                 "Tech Corp",
                 "#FF5733",
                 "1600 Amphitheatre Parkway, Mountain View, CA 94043",
+                "headquarters, office, tech",
             ],
-            ["Tech Corp", "#FF5733", "1 Hacker Way, Menlo Park, CA 94301"],
-            ["Data Solutions", "#33FF57", "410 Terry Ave N, Seattle, WA 98109"],
-            ["Analytics Inc", "#3357FF", "1 Microsoft Way, Redmond, WA 98052"],
+            [
+                "Tech Corp",
+                "#FF5733",
+                "1 Hacker Way, Menlo Park, CA 94301",
+                "research, development, office",
+            ],
+            [
+                "Data Solutions",
+                "#33FF57",
+                "410 Terry Ave N, Seattle, WA 98109",
+                "data-center, cloud, office",
+            ],
+            [
+                "Analytics Inc",
+                "#3357FF",
+                "1 Microsoft Way, Redmond, WA 98052",
+                "headquarters, research, office",
+            ],
         ];
 
         // Generate CSV content
@@ -45,11 +61,30 @@ class TemplateController {
             "legend_color",
             "latitude",
             "longitude",
+            "tags",
         ];
         const sampleData = [
-            ["Mobile Corp", "#FF33F5", "37.4419", "-122.1430"],
-            ["Cloud Services", "#F5FF33", "47.6062", "-122.3321"],
-            ["AI Innovations", "#33F5FF", "40.7589", "-73.9851"],
+            [
+                "Mobile Corp",
+                "#FF33F5",
+                "37.4419",
+                "-122.1430",
+                "mobile, office, headquarters",
+            ],
+            [
+                "Cloud Services",
+                "#F5FF33",
+                "47.6062",
+                "-122.3321",
+                "cloud, data-center, office",
+            ],
+            [
+                "AI Innovations",
+                "#33F5FF",
+                "40.7589",
+                "-73.9851",
+                "ai, research, office",
+            ],
         ];
 
         // Generate CSV content
