@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "import-data": "node src/utils/data-import.js"
+    "dev": "nodemon --env-file=.env.development server.js"
   },
   "keywords": [],
   "author": "",

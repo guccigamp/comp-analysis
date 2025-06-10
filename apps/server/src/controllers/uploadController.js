@@ -34,7 +34,6 @@ const uploadCSV = async (req, res) => {
                     csv({
                         separator: ",", // Explicitly set comma as delimiter
                         skipLines: 0,
-                        headers: true,
                     })
                 )
                 .on("data", (row) => {
@@ -62,6 +61,7 @@ const uploadCSV = async (req, res) => {
                         }
                     });
                     csvData.push(normalizedRow);
+                    console.log(normalizedRow);
                 })
                 .on("end", resolve)
                 .on("error", reject);
@@ -307,6 +307,7 @@ const uploadCSV = async (req, res) => {
                                 type: "Point",
                                 coordinates: facilityData.coordinates,
                             },
+                            tags: facilityData.tags,
                         });
                         return await facility.save();
                     }
@@ -384,8 +385,9 @@ const validateCSVStructure = (csvData) => {
         };
     }
 
-    const firstRow = csvData[0];
+    const firstRow = csvData[1];
     const columns = Object.keys(firstRow);
+    console.log(columns);
 
     // Check for required columns
     const hasCompanyName = columns.some((col) =>
@@ -427,6 +429,23 @@ const validateCSVStructure = (csvData) => {
                 "address OR (latitude AND longitude)",
             ],
         };
+    }
+
+    // Optional: Validate tags column if present
+    if (columns.includes("tags")) {
+        for (const row of csvData) {
+            if (
+                row.tags &&
+                !Array.isArray(row.tags) &&
+                typeof row.tags !== "string"
+            ) {
+                return {
+                    isValid: false,
+                    message:
+                        "If present, 'tags' column must be a comma-separated string or array.",
+                };
+            }
+        }
     }
 
     return {

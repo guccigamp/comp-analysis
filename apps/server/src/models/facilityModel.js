@@ -142,6 +142,7 @@ facilitySchema.methods.setLocation = function (latitude, longitude) {
 facilitySchema.index({ companyId: 1, state: 1 });
 facilitySchema.index({ companyId: 1, city: 1 });
 facilitySchema.index({ companyId: 1, active: 1 });
+facilitySchema.index({ name: 1 }); // Add explicit index for name field
 
 const Facility = mongoose.model("Facility", facilitySchema);
 
