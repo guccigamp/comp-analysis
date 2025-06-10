@@ -248,17 +248,23 @@ export const getFilteredFacilities = async (req, res, next) => {
 
         // Add company filter
         if (companyId) {
-            query.companyId = companyId;
+            const companyIds = Array.isArray(companyId)
+                ? companyId
+                : companyId.split(",");
+
+            query.companyId = { $in: companyIds };
         }
 
         // Add state filter
         if (state) {
-            query.state = { $regex: new RegExp(state, "i") };
+            const stateList = Array.isArray(state) ? state : state.split(",");
+            query.state = { $in: stateList.map((s) => new RegExp(s, "i")) };
         }
 
         // Add city filter
         if (city) {
-            query.city = { $regex: new RegExp(city, "i") };
+            const cityList = Array.isArray(city) ? city : city.split(",");
+            query.city = { $in: cityList.map((c) => new RegExp(c, "i")) };
         }
 
         // Add geospatial query if coordinates and radius are provided
