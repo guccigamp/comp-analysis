@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card"
-import { Label } from "../components/ui/label"
-import { Input } from "../components/ui/input"
-import { Button } from "../components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card.jsx"
+import { Label } from "../components/ui/label.jsx"
+import { Input } from "../components/ui/input.jsx"
+import { Button } from "../components/ui/button.jsx"
 import { Mail } from "lucide-react"
-import { useAuth } from "../contexts/AuthContext"
+import { useAuth } from "../contexts/AuthContext.jsx"
 
 
 export default function Login() {

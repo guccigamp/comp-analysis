@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useMemo } from "react"
 import { Marker, InfoWindow } from "@vis.gl/react-google-maps"
 

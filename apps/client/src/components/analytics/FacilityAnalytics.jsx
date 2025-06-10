@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { MetricCards } from "./MetricCards"
-import { CompanyChart } from "./CompanyChart"
-import { StateChart } from "./StateChart"
-import { CompanyPieChart } from "./CompanyPieChart"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.jsx"
+import { MetricCards } from "./MetricCards.jsx"
+import { CompanyChart } from "./CompanyChart.jsx"
+import { StateChart } from "./StateChart.jsx"
+import { CompanyPieChart } from "./CompanyPieChart.jsx"
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react"
-import { Button } from "../ui/button"
-import { companyApi } from "../../lib/api"
-import { transformCompanyData, getCompanySummaries, getStateSummaries } from "../../utils/facility-utils"
+import { Button } from "../ui/button.jsx"
+import { companyApi } from "../../lib/api.js"
+import { transformCompanyData, getCompanySummaries, getStateSummaries } from "../../utils/facility-utils.js"
 
 export function FacilityAnalytics() {
   const [companies, setCompanies] = useState([])

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "../../ui/card.jsx"
 
 export default function ProximityMapItem({ facility, index, proximityRadius, mapImage, facilityData }) {
   // Calculate facilities within proximity (simplified - in real app you'd use actual distance calculations)

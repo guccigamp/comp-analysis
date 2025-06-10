@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "../../ui/card.jsx"
 
 export default function RecommendationsSummary({ customerName, proximityRadius, facilityData }) {
   const topStates = Object.entries(facilityData.states)

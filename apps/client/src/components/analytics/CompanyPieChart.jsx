@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card.jsx"
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"
 
 export function CompanyPieChart({ companySummaries, totalFacilities }) {

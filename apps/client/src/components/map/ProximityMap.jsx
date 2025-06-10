@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { facilityApi } from "../../lib/api"
-import { transformFacilityData } from "../../utils/facility-utils"
-import { useSearch } from "../../contexts/SearchContext"
-import { InteractiveMap } from "./InteractiveMap"
-import { FacilityCardList } from "./FacilityCardList"
-import { FacilityCard } from "./FacilityCard"
-import { buildApiFilters } from "../../utils/facility-utils"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
+import { facilityApi } from "../../lib/api.js"
+import { transformFacilityData } from "../../utils/facility-utils.js"
+import { useSearch } from "../../contexts/SearchContext.jsx"
+import { InteractiveMap } from "./InteractiveMap.jsx"
+import { FacilityCardList } from "./FacilityCardList.jsx"
+import { FacilityCard } from "./FacilityCard.jsx"
+import { buildApiFilters } from "../../utils/facility-utils.js"
 
 export function ProximityMap({ centerFacility }) {
     const [nearbyFacilities, setNearbyFacilities] = useState([])

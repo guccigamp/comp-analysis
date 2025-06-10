@@ -1,13 +1,13 @@
 import { useState } from "react"
-import { Header } from "../components/Header"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { Header } from "../components/Header.jsx"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs.jsx"
 import { MapIcon, ListIcon, BarChart3Icon } from "lucide-react"
-import { MainMap } from "../components/map/MainMap"
-import { List } from "../components/list/List"
-import { FacilityAnalytics } from "../components/analytics/FacilityAnalytics"
-import { SearchBar } from "../components/search/SearchBar"
-import { ProximitySettings } from "../components/search/ProximitySettings"
-import { AdvancedFilters } from "../components/search/AdvancedFilters"
+import { MainMap } from "../components/map/MainMap.jsx"
+import { List } from "../components/list/List.jsx"
+import { FacilityAnalytics } from "../components/analytics/FacilityAnalytics.jsx"
+import { SearchBar } from "../components/search/SearchBar.jsx"
+import { ProximitySettings } from "../components/search/ProximitySettings.jsx"
+import { AdvancedFilters } from "../components/search/AdvancedFilters.jsx"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("map")

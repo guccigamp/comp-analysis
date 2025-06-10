@@ -1,10 +1,10 @@
-import { ReportHeader } from "./ReportHeader"
-import { ReportFooter } from "./ReportFooter"
-import { CustomerInfo } from "./CustomerInfo"
-import { ExecutiveSummary } from "./ExecutiveSummary"
-import { FacilityMapCard } from "./FacilityMapCard"
-import { ProximityAnalysis } from "./ProximityAnalysis"
-import { buildStaticMap } from "../../../utils/map-utils"
+import { ReportHeader } from "./ReportHeader.jsx"
+import { ReportFooter } from "./ReportFooter.jsx"
+import { CustomerInfo } from "./CustomerInfo.jsx"
+import { ExecutiveSummary } from "./ExecutiveSummary.jsx"
+import { FacilityMapCard } from "./FacilityMapCard.jsx"
+import { ProximityAnalysis } from "./ProximityAnalysis.jsx"
+import { buildStaticMap } from "../../../utils/map-utils.js"
 
 function ReportTemplate({
     featuredFacilities,

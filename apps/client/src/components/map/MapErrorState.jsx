@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw } from "lucide-react"
-import { Button } from "../ui/button"
+import { Button } from "../ui/button.jsx"
 
 export function MapErrorState({ error, onRetry }) {
     return (

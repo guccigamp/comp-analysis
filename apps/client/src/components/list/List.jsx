@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { Table } from "./Table"
-import { Button } from "../ui/button"
+import { Table } from "./Table.jsx"
+import { Button } from "../ui/button.jsx"
 import { Download, Upload, Loader2, AlertCircle, RefreshCw } from "lucide-react"
-import { useSearch } from "../../contexts/SearchContext"
-import { exportFacilitiesToCSV } from "../../utils/export-utils"
-import { useToast } from "../../hooks/use-toast"
-import { uploadApi, templateApi } from "../../lib/api"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { useSearch } from "../../contexts/SearchContext.jsx"
+import { exportFacilitiesToCSV } from "../../utils/export-utils.js"
+import { useToast } from "../../hooks/use-toast.jsx"
+import { uploadApi, templateApi } from "../../lib/api.js"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu.jsx"
 
 
 

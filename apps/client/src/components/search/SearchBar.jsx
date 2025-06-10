@@ -1,9 +1,7 @@
-"use client"
-
-import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { X, Search, Building, Globe, MapIcon as City, Loader2 } from "lucide-react"
-import { useSearch } from "../../contexts/SearchContext"
-import { companyApi } from "../../lib/api"
+import { useSearch } from "../../contexts/SearchContext.jsx"
+import { companyApi } from "../../lib/api.js"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 
 export function SearchBar() {
     const { filters, totalResults, clearFilters, updateFilters, loading, error } = useSearch()

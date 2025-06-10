@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom"
-import { AuthProvider } from "./contexts/AuthContext"
-import { SearchProvider } from "./contexts/SearchContext"
-import RequireAuth from "./components/RequireAuth"
-import Login from "./pages/Login"
-import Dashboard from "./pages/Dashboard"
+import { AuthProvider } from "./contexts/AuthContext.jsx"
+import { SearchProvider } from "./contexts/SearchContext.jsx"
+import RequireAuth from "./components/RequireAuth.jsx"
+import Login from "./pages/Login.jsx"
+import Dashboard from "./pages/Dashboard.jsx"
 
 function App() {
 	return (

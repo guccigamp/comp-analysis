@@ -1,4 +1,4 @@
-import { Card } from "../ui/card"
+import { Card } from "../ui/card.jsx"
 import { Building } from "lucide-react"
 
 export function FacilityCard({ facility }) {

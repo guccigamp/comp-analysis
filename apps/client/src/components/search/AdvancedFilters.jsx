@@ -1,15 +1,15 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
-import { Button } from "../ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Badge } from "../ui/badge"
-import { Checkbox } from "../ui/checkbox"
-import { Input } from "../ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Button } from "../ui/button.jsx"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
+import { Badge } from "../ui/badge.jsx"
+import { Checkbox } from "../ui/checkbox.jsx"
+import { Input } from "../ui/input.jsx"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.jsx"
 import { X, Settings, ChevronDown, Search, Building, Globe, Loader2 } from "lucide-react"
-import { useSearch } from "../../contexts/SearchContext"
-import { companyApi } from "../../lib/api"
+import { useSearch } from "../../contexts/SearchContext.jsx"
+import { companyApi } from "../../lib/api.js"
 
 // Define regions for geographic filtering
 const US_REGIONS = {

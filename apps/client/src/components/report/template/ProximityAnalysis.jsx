@@ -1,4 +1,4 @@
-import ProximityMapItem from "./ProximityMapItem"
+import ProximityMapItem from "./ProximityMapItem.jsx"
 
 export default function ProximityAnalysis({ customerName, proximityRadius, facilityData, mapImage }) {
   return (

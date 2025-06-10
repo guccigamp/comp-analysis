@@ -1,4 +1,4 @@
-import { Card, CardContent } from "../../ui/card"
+import { Card, CardContent } from "../../ui/card.jsx"
 
 export default function StatisticsSummary({ customerName, facilityData }) {
   const topStates = Object.entries(facilityData.states)

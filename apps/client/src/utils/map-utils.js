@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import fs from "fs";
-import { markerApi } from "../lib/api.js";
 
 dotenv.config({ path: "../../.env.local" });
 // This file is now simplified - pin creation is handled by the Pin component

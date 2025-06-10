@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react"
-import { useSearch } from "../../contexts/SearchContext"
-import { FacilityCardList } from "./FacilityCardList"
-import { InteractiveMap } from "./InteractiveMap"
-import { ProximityMap } from "./ProximityMap"
+import { useSearch } from "../../contexts/SearchContext.jsx"
+import { FacilityCardList } from "./FacilityCardList.jsx"
+import { InteractiveMap } from "./InteractiveMap.jsx"
+import { ProximityMap } from "./ProximityMap.jsx"
 
 export function MainMap() {
     const [selectedFacility, setSelectedFacility] = useState(null)

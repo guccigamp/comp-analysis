@@ -1,6 +1,6 @@
-import { Card } from "../ui/card"
+import { Card } from "../ui/card.jsx"
 import { Building, MapPin, Loader2, AlertCircle } from "lucide-react"
-import { Button } from "../ui/button"
+import { Button } from "../ui/button.jsx"
 
 export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry }) {
 	if (loading) {

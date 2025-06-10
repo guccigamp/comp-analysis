@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useMemo, useCallback, useEffect } from "react"
-import { facilityApi } from "../lib/api"
-import { transformFacilityData, extractCityFromAddress, buildApiFilters } from "../utils/facility-utils"
+import { facilityApi } from "../lib/api.js"
+import { transformFacilityData, extractCityFromAddress, buildApiFilters } from "../utils/facility-utils.js"
 
 const SearchContext = createContext(undefined)
 

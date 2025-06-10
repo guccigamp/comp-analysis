@@ -1,14 +1,14 @@
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Button } from "../ui/button"
-import { Checkbox } from "../ui/checkbox"
-import { Label } from "../ui/label"
-import { companyApi, facilityApi } from "../../lib/api"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.jsx"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.jsx"
+import { Button } from "../ui/button.jsx"
+import { Checkbox } from "../ui/checkbox.jsx"
+import { Label } from "../ui/label.jsx"
+import { companyApi, facilityApi } from "../../lib/api.js"
 import { useState, useEffect } from "react"
 import { Loader2, Download } from "lucide-react"
-import generateReport from "./template/ReportTemplate"
-import { transformFacilityData } from "../../utils/facility-utils"
-import { useSearch } from "../../contexts/SearchContext"
+import generateReport from "./template/ReportTemplate.jsx"
+import { transformFacilityData } from "../../utils/facility-utils.js"
+import { useSearch } from "../../contexts/SearchContext.jsx"
 
 export function ReportButton({ }) {
     const [companies, setCompanies] = useState([]);

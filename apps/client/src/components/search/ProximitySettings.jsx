@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Button } from "../ui/button"
+import { Button } from "../ui/button.jsx"
 import { MapPin, Settings } from "lucide-react"
-import { useSearch } from "../../contexts/SearchContext"
+import { useSearch } from "../../contexts/SearchContext.jsx"
 
 export function ProximitySettings() {
 	const { filters, updateFilters, loading } = useSearch()

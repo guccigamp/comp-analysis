@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { APIProvider, Map as GoogleMapComponent } from "@vis.gl/react-google-maps"
-import { MarkerPin } from "./MarkerPin"
-import { ProximityCircle } from "./ProximityCircle"
-import { MapLoadingState } from "./MapLoadingState"
-import { MapErrorState } from "./MapErrorState"
+import { MarkerPin } from "./MarkerPin.jsx"
+import { ProximityCircle } from "./ProximityCircle.jsx"
+import { MapLoadingState } from "./MapLoadingState.jsx"
+import { MapErrorState } from "./MapErrorState.jsx"
 
 export function InteractiveMap({
     facilities = [],

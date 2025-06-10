@@ -1,8 +1,6 @@
-"use client"
-
 import { useEffect, useRef } from "react"
 import { useMap, Marker } from "@vis.gl/react-google-maps"
-import { usePinIcon } from "../ui/pin"
+import { usePinIcon } from "../ui/pin.jsx"
 
 export function ProximityCircle({ center, radius, unit }) {
     const map = useMap()
