@@ -13,10 +13,10 @@ const getMarkers = async (req, res) => {
           xmlns="http://www.w3.org/2000/svg"
         >
           {/* Main circle */}
-          <circle cx="60" cy="60" r="50" fill="${color}" stroke="${color}" strokeWidth="10" />
+          <circle cx="60" cy="60" r="50" fill="#${color}" stroke="#${color}" strokeWidth="10" />
 
           {/* Pin point - downward facing triangle with flat edge at top */}
-          <path d="M30 100 L90 100 L60 150 Z" fill="${color}" />
+          <path d="M30 100 L90 100 L60 150 Z" fill="#${color}" />
 
           {/* Inner white circle */}
           <circle cx="60" cy="60" r="45" fill="white" />
@@ -31,10 +31,10 @@ const getMarkers = async (req, res) => {
           xmlns="http://www.w3.org/2000/svg"
         >
           {/* Main circle */}
-          <circle cx="60" cy="60" r="50" fill="${color}" stroke="${color}" strokeWidth="10" />
+          <circle cx="60" cy="60" r="50" fill="#${color}" stroke="#${color}" strokeWidth="10" />
 
           {/* Pin point - downward facing triangle with flat edge at top */}
-          <path d="M30 100 L90 100 L60 150 Z" fill="${color}" />
+          <path d="M30 100 L90 100 L60 150 Z" fill="#${color}" />
 
           {/* Inner white circle */}
           <circle cx="60" cy="60" r="45" fill="white" />
