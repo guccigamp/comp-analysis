@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { Button } from "../ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
@@ -5,9 +7,9 @@ import { Badge } from "../ui/badge"
 import { Checkbox } from "../ui/checkbox"
 import { Input } from "../ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { X, Settings, ChevronDown, Search, Building, Globe } from "lucide-react"
-import { useSearch } from "../../contexts/search-context"
-import { flattenFacilityData } from "../../utils/facility-utils"
+import { X, Settings, ChevronDown, Search, Building, Globe, Loader2 } from "lucide-react"
+import { useSearch } from "../../contexts/SearchContext"
+import { companyApi } from "../../lib/api"
 
 // Define regions for geographic filtering
 const US_REGIONS = {
@@ -97,9 +99,11 @@ const US_REGIONS = {
 }
 
 export function AdvancedFilters() {
-    const { filters, updateFilters, filteredFacilities } = useSearch()
+    const { filters, updateFilters, loading } = useSearch()
     const [isOpen, setIsOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("regions")
+    const [companiesData, setCompaniesData] = useState([])
+    const [companiesLoading, setCompaniesLoading] = useState(false)
 
     // Region state
     const [selectedRegions, setSelectedRegions] = useState([])
@@ -114,25 +118,33 @@ export function AdvancedFilters() {
     // Track if we're updating from context
     const isUpdating = useRef(false)
 
-    // Get all companies with their facility counts
-    const allCompaniesData = useMemo(() => {
-        const facilities = flattenFacilityData()
-        const companyMap = new Map()
+    // Load companies data when component mounts
+    useEffect(() => {
+        const loadCompanies = async () => {
+            try {
+                setCompaniesLoading(true)
+                const response = await companyApi.getAllCompanies()
+                const companies = response.data
+                    .map((company) => {
+                        const facilityCount = company.facilities ? company.facilities.length : 0
+                        return {
+                            id: company._id,
+                            name: company.name,
+                            color: company.legend_color,
+                            facilityCount,
+                        }
+                    })
+                    .sort((a, b) => a.name.localeCompare(b.name))
 
-        facilities.forEach((facility) => {
-            if (companyMap.has(facility.companyId)) {
-                companyMap.get(facility.companyId).facilityCount++
-            } else {
-                companyMap.set(facility.companyId, {
-                    id: facility.companyId,
-                    name: facility.companyName,
-                    color: facility.color,
-                    facilityCount: 1,
-                })
+                setCompaniesData(companies)
+            } catch (err) {
+                console.error("Error loading companies:", err)
+            } finally {
+                setCompaniesLoading(false)
             }
-        })
+        }
 
-        return Array.from(companyMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+        loadCompanies()
     }, [])
 
     // Close menu when clicking outside
@@ -164,6 +176,8 @@ export function AdvancedFilters() {
     const syncToContext = useCallback(() => {
         isUpdating.current = true
         updateFilters({
+            selectedCompanies: [],
+            selectedStates: [],
             advanced: {
                 selectedRegions,
                 selectedStates,
@@ -252,11 +266,11 @@ export function AdvancedFilters() {
 
     // Filter companies based on search term
     const filteredCompanies = useMemo(() => {
-        if (!companySearchTerm.trim()) return allCompaniesData
+        if (!companySearchTerm.trim()) return companiesData
 
         const searchLower = companySearchTerm.toLowerCase()
-        return allCompaniesData.filter((company) => company.name.toLowerCase().includes(searchLower))
-    }, [allCompaniesData, companySearchTerm])
+        return companiesData.filter((company) => company.name.toLowerCase().includes(searchLower))
+    }, [companiesData, companySearchTerm])
 
     // Clear all filters
     const handleClearAll = useCallback(() => {
@@ -293,6 +307,7 @@ export function AdvancedFilters() {
                 size="sm"
                 className="gap-2"
                 onClick={() => setIsOpen(!isOpen)}
+                disabled={loading}
             >
                 <Settings className="h-4 w-4" />
                 Advanced Filters
@@ -319,120 +334,127 @@ export function AdvancedFilters() {
                     </CardHeader>
 
                     <CardContent className="space-y-4">
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="regions" className="flex items-center gap-2">
-                                    <Globe className="h-4 w-4" />
-                                    Regions ({regionFiltersCount})
-                                </TabsTrigger>
-                                <TabsTrigger value="companies" className="flex items-center gap-2">
-                                    <Building className="h-4 w-4" />
-                                    Companies ({companyFiltersCount})
-                                </TabsTrigger>
-                            </TabsList>
+                        {loading || companiesLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                <span className="ml-2">Loading data...</span>
+                            </div>
+                        ) : (
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="regions" className="flex items-center gap-2">
+                                        <Globe className="h-4 w-4" />
+                                        Regions ({regionFiltersCount})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="companies" className="flex items-center gap-2">
+                                        <Building className="h-4 w-4" />
+                                        Companies ({companyFiltersCount})
+                                    </TabsTrigger>
+                                </TabsList>
 
-                            {/* Regions Tab */}
-                            <TabsContent value="regions" className="space-y-4 max-h-64 overflow-y-auto">
-                                {Object.entries(US_REGIONS).map(([regionKey, region]) => {
-                                    const isRegionSelected = selectedRegions.includes(regionKey)
-                                    const isPartiallySelected = isRegionPartiallySelected(regionKey)
+                                {/* Regions Tab */}
+                                <TabsContent value="regions" className="space-y-4 max-h-64 overflow-y-auto">
+                                    {Object.entries(US_REGIONS).map(([regionKey, region]) => {
+                                        const isRegionSelected = selectedRegions.includes(regionKey)
+                                        const isPartiallySelected = isRegionPartiallySelected(regionKey)
 
-                                    return (
-                                        <div key={regionKey} className="space-y-2">
-                                            <div className="flex items-center space-x-2 p-2 bg-muted/30 rounded-md">
+                                        return (
+                                            <div key={regionKey} className="space-y-2">
+                                                <div className="flex items-center space-x-2 p-2 bg-muted/30 rounded-md">
+                                                    <Checkbox
+                                                        id={`region-${regionKey}`}
+                                                        checked={isRegionSelected}
+                                                        ref={(el) => {
+                                                            if (el) {
+                                                                el.indeterminate = isPartiallySelected && !isRegionSelected
+                                                            }
+                                                        }}
+                                                        onCheckedChange={() => handleRegionToggle(regionKey)}
+                                                    />
+                                                    <label
+                                                        htmlFor={`region-${regionKey}`}
+                                                        className="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                    >
+                                                        {region.name}
+                                                    </label>
+                                                    <span className="text-xs text-muted-foreground">({region.states.length} states)</span>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-1 ml-6">
+                                                    {region.states.map((state) => (
+                                                        <div key={state.code} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`state-${state.code}`}
+                                                                checked={selectedStates.includes(state.code)}
+                                                                onCheckedChange={() => handleStateToggle(state.code)}
+                                                            />
+                                                            <label
+                                                                htmlFor={`state-${state.code}`}
+                                                                className="text-xs leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                            >
+                                                                {state.name}
+                                                            </label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </TabsContent>
+
+                                {/* Companies Tab */}
+                                <TabsContent value="companies" className="space-y-4">
+                                    {/* Search Input */}
+                                    <div className="relative">
+                                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search companies..."
+                                            value={companySearchTerm}
+                                            onChange={(e) => setCompanySearchTerm(e.target.value)}
+                                            className="pl-8"
+                                        />
+                                    </div>
+
+                                    <div className="max-h-64 overflow-y-auto space-y-1">
+                                        {filteredCompanies.map((company) => (
+                                            <div key={company.id} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
                                                 <Checkbox
-                                                    id={`region-${regionKey}`}
-                                                    checked={isRegionSelected}
-                                                    ref={(el) => {
-                                                        if (el) {
-                                                            el.indeterminate = isPartiallySelected && !isRegionSelected
-                                                        }
-                                                    }}
-                                                    onCheckedChange={() => handleRegionToggle(regionKey)}
+                                                    id={`company-${company.id}`}
+                                                    checked={selectedCompanies.includes(company.id)}
+                                                    onCheckedChange={() => handleCompanyToggle(company.id)}
                                                 />
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: company.color }} />
                                                 <label
-                                                    htmlFor={`region-${regionKey}`}
-                                                    className="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                    htmlFor={`company-${company.id}`}
+                                                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                                                 >
-                                                    {region.name}
+                                                    {company.name}
                                                 </label>
-                                                <span className="text-xs text-muted-foreground">({region.states.length} states)</span>
+                                                <span className="text-xs text-muted-foreground">{company.facilityCount} facilities</span>
                                             </div>
+                                        ))}
 
-                                            <div className="grid grid-cols-2 gap-1 ml-6">
-                                                {region.states.map((state) => (
-                                                    <div key={state.code} className="flex items-center space-x-2">
-                                                        <Checkbox
-                                                            id={`state-${state.code}`}
-                                                            checked={selectedStates.includes(state.code)}
-                                                            onCheckedChange={() => handleStateToggle(state.code)}
-                                                        />
-                                                        <label
-                                                            htmlFor={`state-${state.code}`}
-                                                            className="text-xs leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                                        >
-                                                            {state.name}
-                                                        </label>
-                                                    </div>
-                                                ))}
+                                        {companySearchTerm.trim() && filteredCompanies.length === 0 && (
+                                            <div className="text-center py-4 text-muted-foreground">
+                                                <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                <p>No companies found matching "{companySearchTerm}"</p>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                            </TabsContent>
-
-                            {/* Companies Tab */}
-                            <TabsContent value="companies" className="space-y-4">
-                                {/* Search Input */}
-                                <div className="relative">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search companies..."
-                                        value={companySearchTerm}
-                                        onChange={(e) => setCompanySearchTerm(e.target.value)}
-                                        className="pl-8"
-                                    />
-                                </div>
-
-                                <div className="max-h-64 overflow-y-auto space-y-1">
-                                    {filteredCompanies.map((company) => (
-                                        <div key={company.id} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
-                                            <Checkbox
-                                                id={`company-${company.id}`}
-                                                checked={selectedCompanies.includes(company.id)}
-                                                onCheckedChange={() => handleCompanyToggle(company.id)}
-                                            />
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: company.color }} />
-                                            <label
-                                                htmlFor={`company-${company.id}`}
-                                                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                                            >
-                                                {company.name}
-                                            </label>
-                                            <span className="text-xs text-muted-foreground">{company.facilityCount} facilities</span>
-                                        </div>
-                                    ))}
-
-                                    {companySearchTerm.trim() && filteredCompanies.length === 0 && (
-                                        <div className="text-center py-4 text-muted-foreground">
-                                            <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                            <p>No companies found matching "{companySearchTerm}"</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </TabsContent>
-                        </Tabs>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        )}
 
                         {/* Action Buttons */}
                         <div className="flex justify-between pt-2 border-t">
-                            <Button variant="outline" size="sm" onClick={handleClearAll}>
+                            <Button variant="outline" size="sm" onClick={handleClearAll} disabled={loading || companiesLoading}>
                                 Clear All
                             </Button>
                             <div className="flex gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button size="sm" onClick={handleApplyFilters}>
+                                <Button size="sm" onClick={handleApplyFilters} disabled={loading || companiesLoading}>
                                     Apply
                                 </Button>
                             </div>

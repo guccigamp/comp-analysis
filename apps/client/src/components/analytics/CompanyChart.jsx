@@ -1,7 +1,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
 
-export function CompanyChart({ companies }) {
+export function CompanyChart({ companySummaries }) {
+  if (!companySummaries || companySummaries.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Facilities by Company</CardTitle>
+          <CardDescription>No company data available</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <p className="text-muted-foreground">No data to display</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -12,7 +26,7 @@ export function CompanyChart({ companies }) {
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={companies}
+              data={companySummaries}
               margin={{
                 top: 20,
                 right: 30,
@@ -27,8 +41,8 @@ export function CompanyChart({ companies }) {
                 formatter={(value, name, props) => [`${value} facilities`, props.payload.name]}
                 contentStyle={{ backgroundColor: "white", borderRadius: "6px", border: "1px solid #e2e8f0" }}
               />
-              <Bar dataKey="count">
-                {companies.map((entry, index) => (
+              <Bar dataKey="facilityCount">
+                {companySummaries.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>

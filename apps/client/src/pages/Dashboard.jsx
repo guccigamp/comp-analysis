@@ -1,13 +1,13 @@
 import { useState } from "react"
-import { Header } from "../components/header"
+import { Header } from "../components/Header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { MapIcon, ListIcon, BarChart3Icon } from "lucide-react"
-import { GoogleMap } from "../components/map/google-map"
-import { FacilityList } from "../components/list/facility-list"
-import { FacilityAnalytics } from "../components/analytics/facility-analytics"
-import { MultiSelectSearch } from "../components/search/multi-select-search"
-import { ProximitySearchMenu } from "../components/search/proximity-search-menu"
-import { AdvancedFilters } from "@/components/search/advanced-filters"
+import { MainMap } from "../components/map/MainMap"
+import { List } from "../components/list/List"
+import { FacilityAnalytics } from "../components/analytics/FacilityAnalytics"
+import { SearchBar } from "../components/search/SearchBar"
+import { ProximitySettings } from "../components/search/ProximitySettings"
+import { AdvancedFilters } from "../components/search/AdvancedFilters"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("map")
@@ -21,11 +21,11 @@ export default function Dashboard() {
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <div className="flex-1">
-                <MultiSelectSearch />
+                <SearchBar />
               </div>
               <div className="flex gap-2 mt-2 sm:mt-0">
                 <AdvancedFilters />
-                <ProximitySearchMenu />
+                <ProximitySettings />
               </div>
             </div>
           </div>
@@ -47,12 +47,12 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="map" className="border rounded-lg p-6 bg-card">
-              <GoogleMap />
+              <MainMap />
             </TabsContent>
 
             <TabsContent value="list" className="border rounded-lg p-6 bg-card">
               <h2 className="text-xl font-semibold mb-4">List View</h2>
-              <FacilityList />
+              <List />
             </TabsContent>
 
             <TabsContent value="analytics" className="border rounded-lg p-6 bg-card">

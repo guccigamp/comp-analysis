@@ -8,7 +8,7 @@ export function MetricCards({ totalCompanies, totalFacilities, topCompany, avera
           <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalCompanies}</div>
+          <div className="text-2xl font-bold">{totalCompanies || 0}</div>
           <p className="text-xs text-muted-foreground">Companies in the database</p>
         </CardContent>
       </Card>
@@ -17,7 +17,7 @@ export function MetricCards({ totalCompanies, totalFacilities, topCompany, avera
           <CardTitle className="text-sm font-medium">Total Facilities</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalFacilities}</div>
+          <div className="text-2xl font-bold">{totalFacilities || 0}</div>
           <p className="text-xs text-muted-foreground">Facilities across all companies</p>
         </CardContent>
       </Card>
@@ -26,8 +26,8 @@ export function MetricCards({ totalCompanies, totalFacilities, topCompany, avera
           <CardTitle className="text-sm font-medium">Largest Company</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{topCompany?.name}</div>
-          <p className="text-xs text-muted-foreground">{topCompany?.count} facilities</p>
+          <div className="text-2xl font-bold">{topCompany?.name || "N/A"}</div>
+          <p className="text-xs text-muted-foreground">{topCompany?.count || 0} facilities</p>
         </CardContent>
       </Card>
       <Card>
@@ -35,7 +35,7 @@ export function MetricCards({ totalCompanies, totalFacilities, topCompany, avera
           <CardTitle className="text-sm font-medium">Average Facilities</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{averageFacilities.toFixed(1)}</div>
+          <div className="text-2xl font-bold">{averageFacilities ? averageFacilities.toFixed(1) : "0.0"}</div>
           <p className="text-xs text-muted-foreground">Facilities per company</p>
         </CardContent>
       </Card>

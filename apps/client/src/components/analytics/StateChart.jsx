@@ -1,7 +1,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
-export function StateChart({ states }) {
+export function StateChart({ stateSummaries }) {
+  if (!stateSummaries || stateSummaries.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Facilities by State</CardTitle>
+          <CardDescription>No state data available</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <p className="text-muted-foreground">No data to display</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -12,7 +26,7 @@ export function StateChart({ states }) {
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={states}
+              data={stateSummaries}
               margin={{
                 top: 20,
                 right: 30,

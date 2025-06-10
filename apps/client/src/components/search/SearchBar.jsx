@@ -1,29 +1,60 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
-import { X, Search, Building, Globe, MapIcon as City } from "lucide-react"
-import { useSearch } from "../../contexts/search-context"
-import { getUniqueCompanies, getUniqueStates, getUniqueCities, flattenFacilityData } from "../../utils/facility-utils"
+import { X, Search, Building, Globe, MapIcon as City, Loader2 } from "lucide-react"
+import { useSearch } from "../../contexts/SearchContext"
+import { companyApi } from "../../lib/api"
 
-export function MultiSelectSearch() {
-    const { filters, totalResults, clearFilters, updateFilters } = useSearch()
+export function SearchBar() {
+    const { filters, totalResults, clearFilters, updateFilters, loading, error } = useSearch()
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState("")
     const [selectedFilters, setSelectedFilters] = useState([])
+    const [availableOptions, setAvailableOptions] = useState({ companies: [], states: [], cities: [] })
+    const [optionsLoading, setOptionsLoading] = useState(false)
     const inputRef = useRef(null)
     const dropdownRef = useRef(null)
 
     // Track if we're updating from context changes
     const isUpdatingFromContext = useRef(false)
 
-    // Memoized data to prevent unnecessary recalculations
-    const { companies, states, cities } = useMemo(() => {
-        const allFacilities = flattenFacilityData()
-        return {
-            companies: getUniqueCompanies(allFacilities),
-            states: getUniqueStates(allFacilities),
-            cities: getUniqueCities(allFacilities),
+    // Load available options for filtering
+    useEffect(() => {
+        const loadOptions = async () => {
+            try {
+                setOptionsLoading(true)
+                // Get companies for filtering options
+                const companiesResponse = await companyApi.getAllCompanies()
+                const companies = companiesResponse.data.map((company) => ({
+                    id: company._id,
+                    name: company.name,
+                    color: company.legend_color,
+                }))
+
+                // Extract unique states and cities from company facilities
+                const states = new Set()
+                const cities = new Set()
+
+                companiesResponse.data.forEach((company) => {
+                    company.facilities?.forEach((facility) => {
+                        if (facility.state) states.add(facility.state)
+                        if (facility.city) cities.add(facility.city)
+                    })
+                })
+
+                setAvailableOptions({
+                    companies,
+                    states: Array.from(states).sort(),
+                    cities: Array.from(cities).sort(),
+                })
+            } catch (err) {
+                console.error("Error loading filter options:", err)
+            } finally {
+                setOptionsLoading(false)
+            }
         }
+
+        loadOptions()
     }, [])
 
     // Close dropdown when clicking outside
@@ -60,7 +91,7 @@ export function MultiSelectSearch() {
 
         // Add company filters
         filters.selectedCompanies.forEach((companyId) => {
-            const company = companies.find((c) => c.id === companyId)
+            const company = availableOptions.companies.find((c) => c.id === companyId)
             if (company) {
                 newSelectedFilters.push({
                     id: `company-${company.id}`,
@@ -97,7 +128,6 @@ export function MultiSelectSearch() {
         // Add advanced region filters
         if (filters.advanced?.selectedRegions) {
             filters.advanced.selectedRegions.forEach((regionKey) => {
-                // Define regions mapping for display
                 const regionNames = {
                     northeast: "Northeast",
                     southeast: "Southeast",
@@ -135,7 +165,6 @@ export function MultiSelectSearch() {
             const statesInSelectedRegions = selectedRegions.flatMap((regionKey) => regionStateMapping[regionKey] || [])
 
             filters.advanced.selectedStates.forEach((stateCode) => {
-                // Only show state if it's not part of a selected region
                 if (!statesInSelectedRegions.includes(stateCode)) {
                     const stateNames = {
                         ME: "Maine",
@@ -208,7 +237,7 @@ export function MultiSelectSearch() {
         // Add advanced company filters
         if (filters.advanced?.selectedCompanies) {
             filters.advanced.selectedCompanies.forEach((companyId) => {
-                const company = companies.find((c) => c.id === companyId)
+                const company = availableOptions.companies.find((c) => c.id === companyId)
                 if (company) {
                     newSelectedFilters.push({
                         id: `advanced-company-${company.id}`,
@@ -222,7 +251,7 @@ export function MultiSelectSearch() {
         }
 
         setSelectedFilters(newSelectedFilters)
-    }, [filters, companies])
+    }, [filters, availableOptions])
 
     // Generate filter options based on input
     const options = useMemo(() => {
@@ -231,7 +260,7 @@ export function MultiSelectSearch() {
 
         if (searchTerm || open) {
             // Add company options
-            companies.forEach((company) => {
+            availableOptions.companies.forEach((company) => {
                 if (
                     !selectedFilters.some((f) => f.type === "company" && f.value === company.name) &&
                     company.name.toLowerCase().includes(searchTerm)
@@ -247,7 +276,7 @@ export function MultiSelectSearch() {
             })
 
             // Add state options
-            states.forEach((state) => {
+            availableOptions.states.forEach((state) => {
                 if (
                     !selectedFilters.some((f) => f.type === "state" && f.value === state) &&
                     state.toLowerCase().includes(searchTerm)
@@ -263,7 +292,7 @@ export function MultiSelectSearch() {
             })
 
             // Add city options
-            cities.forEach((city) => {
+            availableOptions.cities.forEach((city) => {
                 if (
                     !selectedFilters.some((f) => f.type === "city" && f.value === city) &&
                     city.toLowerCase().includes(searchTerm)
@@ -280,9 +309,9 @@ export function MultiSelectSearch() {
         }
 
         return newOptions.slice(0, 15) // Limit options for performance
-    }, [inputValue, open, selectedFilters, companies, states, cities])
+    }, [inputValue, open, selectedFilters, availableOptions])
 
-    // Update context when selectedFilters changes (one-way sync from local state to context)
+    // Update context when selectedFilters changes
     const syncFiltersToContext = useCallback(() => {
         const newFilters = {
             searchTerm: "",
@@ -303,7 +332,7 @@ export function MultiSelectSearch() {
                     newFilters.searchTerm = filter.value
                     break
                 case "company":
-                    const company = companies.find((c) => c.name === filter.value)
+                    const company = availableOptions.companies.find((c) => c.name === filter.value)
                     if (company) {
                         newFilters.selectedCompanies.push(company.id)
                     }
@@ -315,7 +344,6 @@ export function MultiSelectSearch() {
                     newFilters.selectedCities.push(filter.value)
                     break
                 case "advanced-region":
-                    // Map region name back to key
                     const regionKeyMap = {
                         Northeast: "northeast",
                         Southeast: "southeast",
@@ -330,7 +358,6 @@ export function MultiSelectSearch() {
                     }
                     break
                 case "advanced-state":
-                    // Map state name back to code
                     const stateCodeMap = {
                         Maine: "ME",
                         "New Hampshire": "NH",
@@ -390,7 +417,7 @@ export function MultiSelectSearch() {
                     advancedFilters.selectedStates.push(stateCode)
                     break
                 case "advanced-company":
-                    const advancedCompany = companies.find((c) => c.name === filter.value)
+                    const advancedCompany = availableOptions.companies.find((c) => c.name === filter.value)
                     if (advancedCompany) {
                         advancedFilters.selectedCompanies.push(advancedCompany.id)
                     }
@@ -409,22 +436,16 @@ export function MultiSelectSearch() {
         setTimeout(() => {
             isUpdatingFromContext.current = false
         }, 0)
-    }, [selectedFilters, companies, updateFilters])
+    }, [selectedFilters, availableOptions, updateFilters])
 
     const handleSelect = useCallback((option) => {
-        setSelectedFilters((prev) => {
-            const newFilters = [...prev, option]
-            return newFilters
-        })
+        setSelectedFilters((prev) => [...prev, option])
         setInputValue("")
         setOpen(false)
     }, [])
 
     const handleRemoveFilter = useCallback((id) => {
-        setSelectedFilters((prev) => {
-            const newFilters = prev.filter((f) => f.id !== id)
-            return newFilters
-        })
+        setSelectedFilters((prev) => prev.filter((f) => f.id !== id))
     }, [])
 
     const handleTextFilter = useCallback(() => {
@@ -435,12 +456,10 @@ export function MultiSelectSearch() {
             let newFilters
 
             if (existingTextFilterIndex !== -1) {
-                // Update existing text filter
                 newFilters = prev.map((f, index) =>
                     index === existingTextFilterIndex ? { ...f, value: inputValue, id: `text-${inputValue}` } : f,
                 )
             } else {
-                // Add new text filter
                 newFilters = [
                     ...prev,
                     {
@@ -480,10 +499,23 @@ export function MultiSelectSearch() {
 
     // Sync to context whenever selectedFilters changes
     useEffect(() => {
-        if (!isUpdatingFromContext.current) {
-            syncFiltersToContext()
-        }
+        if (isUpdatingFromContext.current) return
+
+        // Avoid clearing initial filters by skipping sync when no filters selected
+        if (selectedFilters.length === 0) return
+
+        syncFiltersToContext()
     }, [selectedFilters, syncFiltersToContext])
+
+    if (error) {
+        return (
+            <div className="space-y-4">
+                <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                    <p className="text-red-800 text-sm">{error}</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-4">
@@ -511,7 +543,9 @@ export function MultiSelectSearch() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleInputKeyDown}
                                 onFocus={() => setOpen(true)}
+                                disabled={loading || optionsLoading}
                             />
+                            {(loading || optionsLoading) && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                         </div>
                         {selectedFilters.length > 0 && (
                             <button className="ml-2 p-1 hover:bg-accent rounded" onClick={handleClearFilters}>
@@ -521,7 +555,7 @@ export function MultiSelectSearch() {
                     </div>
 
                     {/* Dropdown */}
-                    {open && options.length > 0 && (
+                    {open && options.length > 0 && !loading && !optionsLoading && (
                         <div className="absolute top-full mt-1 w-full bg-background border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
                             {/* Companies */}
                             {options.filter((option) => option.type === "company").length > 0 && (
@@ -602,10 +636,12 @@ export function MultiSelectSearch() {
             </div>
 
             <div className="text-sm text-muted-foreground">
-                {selectedFilters.length > 0 ? (
+                {loading ? (
+                    <>Loading facilities...</>
+                ) : selectedFilters.length > 0 ? (
                     <>Showing {totalResults} facilities matching your search criteria</>
                 ) : (
-                    <>Showing all {totalResults} facilities</>
+                    <>Showing {totalResults} facilities</>
                 )}
             </div>
         </div>
