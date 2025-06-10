@@ -139,6 +139,7 @@ facilitySchema.methods.setLocation = function (latitude, longitude) {
 };
 
 // Add compound indexes for faster queries
+facilitySchema.index({ location: "2dsphere" });
 facilitySchema.index({ companyId: 1, state: 1 });
 facilitySchema.index({ companyId: 1, city: 1 });
 facilitySchema.index({ companyId: 1, active: 1 });

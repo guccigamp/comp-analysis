@@ -61,7 +61,6 @@ const uploadCSV = async (req, res) => {
                         }
                     });
                     csvData.push(normalizedRow);
-                    console.log(normalizedRow);
                 })
                 .on("end", resolve)
                 .on("error", reject);
@@ -76,6 +75,7 @@ const uploadCSV = async (req, res) => {
 
         // Validate CSV structure
         const validationResult = validateCSVStructure(csvData);
+        console.log(validationResult);
         if (!validationResult.isValid) {
             return res.status(400).json({
                 success: false,
@@ -241,6 +241,7 @@ const uploadCSV = async (req, res) => {
                 state: item.state,
                 zipCode: item.zipCode,
                 coordinates: item.coordinates,
+                tags: item.tags,
             });
         });
 
@@ -385,7 +386,7 @@ const validateCSVStructure = (csvData) => {
         };
     }
 
-    const firstRow = csvData[1];
+    const firstRow = csvData[0];
     const columns = Object.keys(firstRow);
     console.log(columns);
 

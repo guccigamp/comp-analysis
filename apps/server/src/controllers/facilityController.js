@@ -4,6 +4,7 @@ import geocoder from "../services/geocodingService.js";
 import {
     filterFacilitiesByTags,
     removeDuplicateTags,
+    getTagStatistics,
 } from "../utils/tagHelpers.js";
 
 // Get all facilities
