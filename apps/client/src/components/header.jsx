@@ -1,9 +1,9 @@
 // import { Building } from "lucide-react"
 import altorLogo from "../assets/altor-logo.png"
-import { Button } from "./ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { useAuth } from "../contexts/AuthContext"
+import { Button } from "./ui/button.jsx"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu.jsx"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar.jsx"
+import { useAuth } from "../contexts/AuthContext.jsx"
 
 
 export function Header() {
