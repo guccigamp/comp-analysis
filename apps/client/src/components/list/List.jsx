@@ -6,7 +6,7 @@ import { Button } from "../ui/button.jsx"
 import { Download, Upload, Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import { useSearch } from "../../contexts/SearchContext.jsx"
 import { exportFacilitiesToCSV } from "../../utils/export-utils.js"
-import { useToast } from "../../hooks/use-toast.jsx"
+import { useToast } from "../../hooks/use-toast.js"
 import { uploadApi, templateApi } from "../../lib/api.js"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu.jsx"
 
