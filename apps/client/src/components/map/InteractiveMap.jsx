@@ -4,6 +4,8 @@ import { MarkerPin } from "./MarkerPin.jsx"
 import { ProximityCircle } from "./ProximityCircle.jsx"
 import { MapLoadingState } from "./MapLoadingState.jsx"
 import { MapErrorState } from "./MapErrorState.jsx"
+import dotenv from "dotenv"
+dotenv.config()
 
 export function InteractiveMap({
     facilities = [],
@@ -20,7 +22,7 @@ export function InteractiveMap({
     loading = false,
     error = null,
     onRetry,
-    apiKey = import.meta.env.VITE_GOOGLE_MAPS_API,
+    apiKey = process.env.VITE_GOOGLE_MAPS_API,
 }) {
     const [isMapLoading, setIsMapLoading] = useState(true)
     const [mapCenter, setMapCenter] = useState(center)
@@ -115,7 +117,7 @@ export function InteractiveMap({
                 <GoogleMapComponent
                     center={mapCenter}
                     zoom={mapZoom}
-                    mapId={import.meta.env.VITE_MAP_ID}
+                    mapId={process.env.VITE_MAP_ID}
                     style={{ width: "100%", height: "100%" }}
                     gestureHandling="cooperative"
                     onCameraChanged={handleCameraChanged}
