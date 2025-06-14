@@ -1,6 +1,7 @@
 import Facility from "../models/facilityModel.js";
 import Company from "../models/companyModel.js";
 import geocoder from "../services/geocodingService.js";
+import mongoose from "mongoose";
 import {
     filterFacilitiesByTags,
     removeDuplicateTags,
@@ -295,7 +296,10 @@ export const getFilteredFacilities = async (req, res, next) => {
             const companyIds = Array.isArray(companyId)
                 ? companyId
                 : companyId.split(",");
-            matchStage.companyId = { $in: companyIds };
+            // Convert string IDs to ObjectIds
+            matchStage.companyId = {
+                $in: companyIds.map((id) => new mongoose.Types.ObjectId(id)),
+            };
         }
 
         // Add state filter
