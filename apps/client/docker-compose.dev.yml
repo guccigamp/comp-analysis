@@ -10,6 +10,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - VITE_GOOGLE_MAPS_API=${VITE_GOOGLE_MAPS_API}
       - VITE_MAP_ID=${VITE_MAP_ID}
