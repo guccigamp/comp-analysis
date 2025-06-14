@@ -172,23 +172,67 @@ export const findFacilitiesNearby = async (req, res, next) => {
 
         // Convert radius to meters (MongoDB uses meters for $geoNear)
         const radiusInMeters =
-            unit === "kilometers" ? radius * 1000 : radius * 1609.34; // miles to meters
+            unit === "kilometers" ? radius * 1000 : radius * 1609.34;
 
-        const facilities = await Facility.find({
-            active: true,
-            location: {
-                $nearSphere: {
-                    $geometry: {
+        const pipeline = [
+            {
+                $geoNear: {
+                    near: {
                         type: "Point",
                         coordinates: [
                             parseFloat(longitude),
                             parseFloat(latitude),
                         ],
                     },
-                    $maxDistance: radiusInMeters,
+                    distanceField: "distance",
+                    spherical: true,
+                    maxDistance: radiusInMeters,
+                    query: { active: true },
                 },
             },
-        }).populate("companyId", "name legend_color");
+            {
+                $lookup: {
+                    from: "companies",
+                    localField: "companyId",
+                    foreignField: "_id",
+                    as: "companyId",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$companyId",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    address: 1,
+                    city: 1,
+                    state: 1,
+                    zipCode: 1,
+                    tags: 1,
+                    location: 1,
+                    active: 1,
+                    "companyId._id": 1,
+                    "companyId.name": 1,
+                    "companyId.legend_color": 1,
+                    distance: 1,
+                },
+            },
+        ];
+
+        let facilities = await Facility.aggregate(pipeline);
+
+        // Convert distance to requested unit
+        facilities = facilities.map((facility) => ({
+            ...facility,
+            distance:
+                unit === "kilometers"
+                    ? facility.distance / 1000
+                    : facility.distance / 1609.34, // Convert meters to miles
+        }));
 
         res.status(200).json(facilities);
     } catch (error) {
@@ -243,53 +287,112 @@ export const getFilteredFacilities = async (req, res, next) => {
             unit = "miles",
         } = req.query;
 
-        // Build base query
-        let query = { active: true };
+        // Build match stage for filtering
+        let matchStage = { active: true };
 
         // Add company filter
         if (companyId) {
             const companyIds = Array.isArray(companyId)
                 ? companyId
                 : companyId.split(",");
-
-            query.companyId = { $in: companyIds };
+            matchStage.companyId = { $in: companyIds };
         }
 
         // Add state filter
         if (state) {
             const stateList = Array.isArray(state) ? state : state.split(",");
-            query.state = { $in: stateList.map((s) => new RegExp(s, "i")) };
+            matchStage.state = {
+                $in: stateList.map((s) => new RegExp(s, "i")),
+            };
         }
 
         // Add city filter
         if (city) {
             const cityList = Array.isArray(city) ? city : city.split(",");
-            query.city = { $in: cityList.map((c) => new RegExp(c, "i")) };
+            matchStage.city = { $in: cityList.map((c) => new RegExp(c, "i")) };
         }
 
-        // Add geospatial query if coordinates and radius are provided
-        if (radius && latitude && longitude) {
-            const radiusInMeters =
-                unit === "kilometers" ? radius * 1000 : radius * 1609.34;
-            query.location = {
-                $nearSphere: {
-                    $geometry: {
+        // Build aggregation pipeline
+        const pipeline = [];
+
+        // Add $geoNear stage if coordinates are provided
+        if (latitude && longitude) {
+            const radiusInMeters = radius
+                ? unit === "kilometers"
+                    ? radius * 1000
+                    : radius * 1609.34
+                : 1000000; // Default to 1000km if no radius specified
+
+            pipeline.push({
+                $geoNear: {
+                    near: {
                         type: "Point",
                         coordinates: [
                             parseFloat(longitude),
                             parseFloat(latitude),
                         ],
                     },
-                    $maxDistance: radiusInMeters,
+                    distanceField: "distance",
+                    spherical: true,
+                    maxDistance: radiusInMeters,
+                    query: matchStage,
                 },
-            };
+            });
+        } else {
+            // If no coordinates, just use the match stage
+            pipeline.push({ $match: matchStage });
         }
 
-        // Get facilities from database
-        let facilities = await Facility.find(query).populate(
-            "companyId",
-            "name legend_color"
-        );
+        // Add lookup stage for company information
+        pipeline.push({
+            $lookup: {
+                from: "companies",
+                localField: "companyId",
+                foreignField: "_id",
+                as: "companyId",
+            },
+        });
+
+        // Unwind the company array
+        pipeline.push({
+            $unwind: {
+                path: "$companyId",
+                preserveNullAndEmptyArrays: true,
+            },
+        });
+
+        // Project only needed company fields
+        pipeline.push({
+            $project: {
+                _id: 1,
+                name: 1,
+                address: 1,
+                city: 1,
+                state: 1,
+                zipCode: 1,
+                tags: 1,
+                location: 1,
+                active: 1,
+                "companyId._id": 1,
+                "companyId.name": 1,
+                "companyId.legend_color": 1,
+                distance: 1,
+            },
+        });
+
+        // Execute aggregation
+        let facilities = await Facility.aggregate(pipeline);
+
+        // Convert distance to requested unit if coordinates were provided
+        if (latitude && longitude) {
+            facilities = facilities.map((facility) => ({
+                ...facility,
+                distance:
+                    unit === "kilometers"
+                        ? facility.distance / 1000
+                        : facility.distance / 1609.34, // Convert meters to miles
+            }));
+        }
 
         // Apply tag filtering if tags are provided
         if (tags) {

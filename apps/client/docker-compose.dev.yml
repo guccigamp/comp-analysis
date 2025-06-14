@@ -14,4 +14,5 @@ services:
       - VITE_GOOGLE_MAPS_API=${VITE_GOOGLE_MAPS_API}
       - VITE_MAP_ID=${VITE_MAP_ID}
       - VITE_GOOGLE_MAPS_STATIC_API=${VITE_GOOGLE_MAPS_STATIC_API}
+      - VITE_API=${VITE_API}
     command: npm run dev -- --host 0.0.0.0 
