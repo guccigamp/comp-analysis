@@ -34,10 +34,17 @@ export function ProximityMap({ centerFacility }) {
                     throw new Error("Invalid facility coordinates")
                 }
 
-                // Call backend with the same filters but keeping proximity enabled
-                const response = await facilityApi.getFilteredFacilities(
-                    buildApiFilters(filters)
-                )
+                // Create filters that include both proximity and other filters
+                const apiFilters = {
+                    ...buildApiFilters(filters),
+                    latitude: centerFacility.latitude,
+                    longitude: centerFacility.longitude,
+                    radius: filters.proximity.radius,
+                    unit: filters.proximity.unit
+                }
+
+                // Call backend with combined filters
+                const response = await facilityApi.getFilteredFacilities(apiFilters)
 
                 const facilitiesRaw = Array.isArray(response?.data) ? response.data : []
                 const transformedFacilities = transformFacilityData(facilitiesRaw).filter(
@@ -82,7 +89,6 @@ export function ProximityMap({ centerFacility }) {
                                 </div>
                             ) : (
                                 <div>
-
                                     <div className="overflow-y-auto md:h-[500px]">
                                         <FacilityCardList
                                             facilities={nearbyFacilities}
