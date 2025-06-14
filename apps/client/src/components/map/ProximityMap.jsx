@@ -103,7 +103,7 @@ export function ProximityMap({ centerFacility }) {
                                     lat: centerFacility.latitude,
                                     lng: centerFacility.longitude,
                                 }}
-                                zoom={10}
+                                zoom={5}
                                 height="500px"
                                 loading={loading}
                                 error={error}

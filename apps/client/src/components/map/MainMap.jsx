@@ -43,6 +43,7 @@ export function MainMap() {
                     <InteractiveMap
                         facilities={filteredFacilities || []}
                         selectedFacility={selectedFacility}
+                        setSelectedFacility={setSelectedFacility}
                         loading={loading}
                         error={error}
                         onRetry={refreshData}

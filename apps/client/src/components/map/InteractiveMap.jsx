@@ -17,6 +17,7 @@ export function InteractiveMap({
     proximityRadius = 50,
     proximityUnit = "miles",
     selectedFacility = null,
+    setSelectedFacility = null,
     loading = false,
     error = null,
     onRetry,
@@ -28,15 +29,19 @@ export function InteractiveMap({
     const isProgrammaticChange = useRef(false)
     const [mapError, setMapError] = useState(null)
 
-    useEffect(() => {
-        if (!selectedFacility) return
+    const updateMapPosition = useCallback((facility) => {
         isProgrammaticChange.current = true
-        setMapCenter({ lat: selectedFacility.latitude, lng: selectedFacility.longitude })
-        setMapZoom((prev) => (prev < 8 ? 8 : prev))
+        setMapCenter({ lat: facility.latitude, lng: facility.longitude })
+        setMapZoom((prev) => (prev < 5 ? 5 : prev))
         setTimeout(() => {
             isProgrammaticChange.current = false
         }, 0)
-    }, [selectedFacility])
+    }, [])
+
+    useEffect(() => {
+        if (!selectedFacility) return
+        updateMapPosition(selectedFacility)
+    }, [selectedFacility, updateMapPosition])
 
     const handleMapLoad = useCallback(() => {
         setIsMapLoading(false)
@@ -51,18 +56,20 @@ export function InteractiveMap({
 
     const handleMarkerClick = useCallback(
         (facility) => {
-            isProgrammaticChange.current = true
-            setMapCenter({ lat: facility.latitude, lng: facility.longitude })
-            setMapZoom((prev) => (prev < 8 ? 8 : prev))
+            updateMapPosition(facility)
             onMarkerClick?.(facility)
-            setTimeout(() => {
-                isProgrammaticChange.current = false
-            }, 0)
         },
-        [onMarkerClick],
+        [onMarkerClick, updateMapPosition],
     )
 
-    const handleInfoWindowClose = useCallback(() => onMarkerClick?.(null), [onMarkerClick])
+    const handleInfoWindowClose = useCallback(() => {
+        isProgrammaticChange.current = true
+        setSelectedFacility?.(null)
+
+        setTimeout(() => {
+            isProgrammaticChange.current = false
+        }, 0)
+    }, [onMarkerClick, zoom])
 
     const handleCameraChanged = useCallback((ev) => {
         if (isProgrammaticChange.current) return
@@ -117,7 +124,7 @@ export function InteractiveMap({
                     zoom={mapZoom}
                     mapId={import.meta.env.VITE_MAP_ID}
                     style={{ width: "100%", height: "100%" }}
-                    gestureHandling="cooperative"
+                    gestureHandling="greedy"
                     onCameraChanged={handleCameraChanged}
                     onLoad={handleMapLoad}
                     onError={handleMapError}
