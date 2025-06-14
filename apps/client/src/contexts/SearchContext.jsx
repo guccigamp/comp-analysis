@@ -19,7 +19,13 @@ const initialFilters = {
     selectedStates: [],
     selectedCities: [],
     proximity: { enabled: false, center: null, radius: 50, unit: "miles" },
-    advanced: { selectedRegions: [], selectedStates: [], selectedCompanies: [] },
+    advanced: {
+        selectedRegions: [],
+        selectedStates: [],
+        selectedCompanies: [],
+        selectedTags: [],
+        matchAllTags: false
+    },
 }
 
 export function SearchProvider({ children }) {
@@ -47,7 +53,8 @@ export function SearchProvider({ children }) {
                     (
                         (filters.advanced.selectedRegions && filters.advanced.selectedRegions.length > 0) ||
                         (filters.advanced.selectedStates && filters.advanced.selectedStates.length > 0) ||
-                        (filters.advanced.selectedCompanies && filters.advanced.selectedCompanies.length > 0)
+                        (filters.advanced.selectedCompanies && filters.advanced.selectedCompanies.length > 0) ||
+                        (filters.advanced.selectedTags && filters.advanced.selectedTags.length > 0)
                     )
 
                 if (!advancedActive && filters.selectedStates.length === 1 && !filters.selectedCompanies.length && !filters.searchTerm) {
@@ -64,7 +71,8 @@ export function SearchProvider({ children }) {
                             enabled: false, // disable proximity for the main data fetch
                         },
                     }
-                    response = await facilityApi.getFilteredFacilities(buildApiFilters(filtersWithoutProximity))
+                    const apiFilters = buildApiFilters(filtersWithoutProximity)
+                    response = await facilityApi.getFilteredFacilities(apiFilters)
                 }
 
                 if (ignore) return
@@ -102,43 +110,49 @@ export function SearchProvider({ children }) {
             try {
                 const updatedFilters = { ...prev }
 
+                // Handle proximity updates
                 if (newFilters.proximity) {
                     updatedFilters.proximity = {
                         ...prev.proximity,
                         ...newFilters.proximity,
                     }
-                    // The check for enabling proximity without a center is primarily UI concern
-                    // handled in ProximitySettings.jsx. Here, we just ensure data validity.
                     if (newFilters.proximity.enabled && !updatedFilters.proximity.center) {
                         console.warn("Proximity enabled attempt without a center in SearchContext. UI should prevent this.")
                     }
                     if (newFilters.proximity.radius) {
                         const radius = Number(newFilters.proximity.radius)
                         if (isNaN(radius) || radius < 1 || radius > 1000) {
-                            // This should be caught by ProximitySettings input, but good to have a safeguard.
                             console.error("Invalid proximity radius passed to updateFilters:", newFilters.proximity.radius)
-                            // Potentially revert or set a default radius if this happens.
-                            // For now, we let it pass, assuming UI validation.
-                            // Or, throw new Error("Invalid proximity radius"); and let setError handle it.
                         }
-                        updatedFilters.proximity.radius = radius // Ensure it's a number
+                        updatedFilters.proximity.radius = radius
                     }
                 }
 
+                // Handle advanced filters
+                if (newFilters.advanced) {
+                    updatedFilters.advanced = {
+                        ...prev.advanced,
+                        ...newFilters.advanced,
+                    }
+                }
+
+                // Handle other filter updates
                 Object.keys(newFilters).forEach(key => {
-                    if (key !== 'proximity') {
+                    if (key !== 'proximity' && key !== 'advanced') {
                         updatedFilters[key] = newFilters[key]
                     }
                 })
 
+                // Only update if there are actual changes
                 if (JSON.stringify(prev) === JSON.stringify(updatedFilters)) {
                     return prev
                 }
+
                 return updatedFilters
             } catch (err) {
                 console.error("Filter update error:", err)
-                setError(err.message) // Set error state for the context
-                return prev // Return previous state on error
+                setError(err.message)
+                return prev
             }
         })
     }, [])

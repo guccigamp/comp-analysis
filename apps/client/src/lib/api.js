@@ -68,14 +68,14 @@ export const facilityApi = {
         const params = new URLSearchParams();
 
         // Add all filter parameters
-        if (filters.companies?.length) {
-            params.append("companyId", filters.companies.join(","));
+        if (filters.companyId) {
+            params.append("companyId", filters.companyId);
         }
-        if (filters.states?.length) {
-            params.append("state", filters.states.join(","));
+        if (filters.state) {
+            params.append("state", filters.state);
         }
-        if (filters.cities?.length) {
-            params.append("city", filters.cities.join(","));
+        if (filters.city) {
+            params.append("city", filters.city);
         }
         if (filters.tags?.length) {
             // Handle multiple tags

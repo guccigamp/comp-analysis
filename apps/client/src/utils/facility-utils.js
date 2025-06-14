@@ -156,129 +156,57 @@ export const getAverageFacilitiesPerCompany = (companies) => {
     return totalFacilities / companies.length;
 };
 
-// Update the buildApiFilters function to be more comprehensive
 // Build API filter object from search context filters
-export const buildApiFilters = (filters) => {
+export function buildApiFilters(filters) {
     const apiFilters = {};
 
-    // Basic filters
+    // Add basic filters
     if (filters.searchTerm) {
         apiFilters.searchTerm = filters.searchTerm;
     }
 
-    if (filters.selectedCompanies?.length > 0) {
-        apiFilters.companies = filters.selectedCompanies;
+    // Add company filters
+    const companies = [];
+    if (filters.selectedCompanies?.length) {
+        companies.push(...filters.selectedCompanies);
+    }
+    if (filters.advanced?.selectedCompanies?.length) {
+        companies.push(...filters.advanced.selectedCompanies);
+    }
+    if (companies.length > 0) {
+        apiFilters.companyId = companies.join(",");
     }
 
-    if (filters.selectedStates?.length > 0) {
-        apiFilters.states = filters.selectedStates;
+    // Add state filters
+    const states = [];
+    if (filters.selectedStates?.length) {
+        states.push(...filters.selectedStates);
+    }
+    if (filters.advanced?.selectedStates?.length) {
+        states.push(...filters.advanced.selectedStates);
+    }
+    if (states.length > 0) {
+        apiFilters.state = states.join(",");
     }
 
-    // Handle proximity search
+    // Add city filters
+    if (filters.selectedCities?.length) {
+        apiFilters.city = filters.selectedCities.join(",");
+    }
+
+    // Add proximity filters
     if (filters.proximity?.enabled && filters.proximity?.center) {
-        apiFilters.latitude = filters.proximity.center.latitude;
-        apiFilters.longitude = filters.proximity.center.longitude;
+        apiFilters.latitude = filters.proximity.center.lat;
+        apiFilters.longitude = filters.proximity.center.lng;
         apiFilters.radius = filters.proximity.radius;
         apiFilters.unit = filters.proximity.unit;
     }
 
-    // Handle advanced filters
-    if (filters.advanced) {
-        // Combine advanced company filters with main company filters
-        if (filters.advanced.selectedCompanies?.length > 0) {
-            const allCompanies = [
-                ...(apiFilters.companies || []),
-                ...filters.advanced.selectedCompanies,
-            ];
-            apiFilters.companies = [...new Set(allCompanies)]; // Remove duplicates
-        }
-
-        // Handle advanced state filters (regions + individual states)
-        if (
-            filters.advanced.selectedRegions?.length > 0 ||
-            filters.advanced.selectedStates?.length > 0
-        ) {
-            const regionStates = [];
-
-            // Map regions to states
-            const regionStateMapping = {
-                northeast: [
-                    "ME",
-                    "NH",
-                    "VT",
-                    "MA",
-                    "RI",
-                    "CT",
-                    "NY",
-                    "NJ",
-                    "PA",
-                ],
-                southeast: [
-                    "DE",
-                    "MD",
-                    "DC",
-                    "VA",
-                    "WV",
-                    "KY",
-                    "TN",
-                    "NC",
-                    "SC",
-                    "GA",
-                    "FL",
-                    "AL",
-                    "MS",
-                    "AR",
-                    "LA",
-                ],
-                midwest: [
-                    "OH",
-                    "MI",
-                    "IN",
-                    "WI",
-                    "IL",
-                    "MN",
-                    "IA",
-                    "MO",
-                    "ND",
-                    "SD",
-                    "NE",
-                    "KS",
-                ],
-                southwest: ["TX", "OK", "NM", "AZ"],
-                west: [
-                    "MT",
-                    "WY",
-                    "CO",
-                    "UT",
-                    "ID",
-                    "WA",
-                    "OR",
-                    "NV",
-                    "CA",
-                    "AK",
-                    "HI",
-                ],
-                international: ["Qro.", "B.C."],
-            };
-
-            // Add states from selected regions
-            filters.advanced.selectedRegions?.forEach((regionKey) => {
-                const states = regionStateMapping[regionKey];
-                if (states) {
-                    regionStates.push(...states);
-                }
-            });
-
-            // Combine with individually selected states
-            const allStates = [
-                ...(apiFilters.states || []),
-                ...regionStates,
-                ...(filters.advanced.selectedStates || []),
-            ];
-
-            apiFilters.states = [...new Set(allStates)]; // Remove duplicates
-        }
+    // Add tag filters
+    if (filters.advanced?.selectedTags?.length) {
+        apiFilters.tags = filters.advanced.selectedTags;
+        apiFilters.matchAllTags = filters.advanced.matchAllTags || false;
     }
 
     return apiFilters;
-};
+}

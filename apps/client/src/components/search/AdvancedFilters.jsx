@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { Button } from "../ui/button.jsx"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
@@ -7,9 +5,9 @@ import { Badge } from "../ui/badge.jsx"
 import { Checkbox } from "../ui/checkbox.jsx"
 import { Input } from "../ui/input.jsx"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.jsx"
-import { X, Settings, ChevronDown, Search, Building, Globe, Loader2 } from "lucide-react"
+import { X, Settings, ChevronDown, Search, Building, Globe, Loader2, Hash } from "lucide-react"
 import { useSearch } from "../../contexts/SearchContext.jsx"
-import { companyApi } from "../../lib/api.js"
+import { companyApi, facilityApi } from "../../lib/api.js"
 
 // Define regions for geographic filtering
 const US_REGIONS = {
@@ -113,18 +111,27 @@ export function AdvancedFilters() {
     const [selectedCompanies, setSelectedCompanies] = useState([])
     const [companySearchTerm, setCompanySearchTerm] = useState("")
 
+    // Tag state
+    const [selectedTags, setSelectedTags] = useState([])
+    const [availableTags, setAvailableTags] = useState([])
+    const [tagSearchTerm, setTagSearchTerm] = useState("")
+    const [tagsLoading, setTagsLoading] = useState(false)
+
     const menuRef = useRef(null)
 
     // Track if we're updating from context
     const isUpdating = useRef(false)
 
-    // Load companies data when component mounts
+    // Load companies and tags data when component mounts
     useEffect(() => {
-        const loadCompanies = async () => {
+        const loadData = async () => {
             try {
                 setCompaniesLoading(true)
-                const response = await companyApi.getAllCompanies()
-                const companies = response.data
+                setTagsLoading(true)
+
+                // Load companies
+                const companiesResponse = await companyApi.getAllCompanies()
+                const companies = companiesResponse.data
                     .map((company) => {
                         const facilityCount = company.facilities ? company.facilities.length : 0
                         return {
@@ -137,14 +144,21 @@ export function AdvancedFilters() {
                     .sort((a, b) => a.name.localeCompare(b.name))
 
                 setCompaniesData(companies)
-            } catch (err) {
-                console.error("Error loading companies:", err)
-            } finally {
                 setCompaniesLoading(false)
+
+                // Load available tags
+                const tagsResponse = await facilityApi.getUniqueTags()
+                const tags = tagsResponse.data.map(tagObj => tagObj.tag) || []
+                setAvailableTags(tags.sort())
+                setTagsLoading(false)
+            } catch (err) {
+                console.error("Error loading data:", err)
+                setCompaniesLoading(false)
+                setTagsLoading(false)
             }
         }
 
-        loadCompanies()
+        loadData()
     }, [])
 
     // Close menu when clicking outside
@@ -169,25 +183,27 @@ export function AdvancedFilters() {
             setSelectedRegions(filters.advanced.selectedRegions || [])
             setSelectedStates(filters.advanced.selectedStates || [])
             setSelectedCompanies(filters.advanced.selectedCompanies || [])
+            setSelectedTags(filters.advanced.selectedTags || [])
         }
     }, [filters.advanced])
 
     // Update context when local state changes
     const syncToContext = useCallback(() => {
         isUpdating.current = true
-        updateFilters({
-            selectedCompanies: [],
-            selectedStates: [],
+        const newFilters = {
+            ...filters, // Preserve existing filters
             advanced: {
                 selectedRegions,
                 selectedStates,
                 selectedCompanies,
+                selectedTags,
             },
-        })
+        }
+        updateFilters(newFilters)
         setTimeout(() => {
             isUpdating.current = false
         }, 0)
-    }, [selectedRegions, selectedStates, selectedCompanies, updateFilters])
+    }, [selectedRegions, selectedStates, selectedCompanies, selectedTags, updateFilters, filters])
 
     // Region handlers
     const handleRegionToggle = useCallback((regionKey) => {
@@ -264,6 +280,13 @@ export function AdvancedFilters() {
         })
     }, [])
 
+    // Tag handlers
+    const handleTagToggle = useCallback((tag) => {
+        setSelectedTags((prev) => {
+            return prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+        })
+    }, [])
+
     // Filter companies based on search term
     const filteredCompanies = useMemo(() => {
         if (!companySearchTerm.trim()) return companiesData
@@ -272,13 +295,45 @@ export function AdvancedFilters() {
         return companiesData.filter((company) => company.name.toLowerCase().includes(searchLower))
     }, [companiesData, companySearchTerm])
 
+    // Filter tags based on search term
+    const filteredTags = useMemo(() => {
+        if (!tagSearchTerm.trim()) return availableTags
+
+        const searchLower = tagSearchTerm.toLowerCase()
+        return availableTags.filter((tag) => tag.toLowerCase().includes(searchLower))
+    }, [availableTags, tagSearchTerm])
+
     // Clear all filters
     const handleClearAll = useCallback(() => {
         setSelectedRegions([])
         setSelectedStates([])
         setSelectedCompanies([])
+        setSelectedTags([])
         setCompanySearchTerm("")
+        setTagSearchTerm("")
     }, [])
+
+    // Select all options in current tab
+    const handleSelectAll = useCallback(() => {
+        switch (activeTab) {
+            case "regions":
+                // Select all regions and their states
+                const allRegions = Object.keys(US_REGIONS)
+                const allStates = Object.values(US_REGIONS).flatMap(region => region.states.map(state => state.code))
+                setSelectedRegions(allRegions)
+                setSelectedStates(allStates)
+                break
+            case "companies":
+                // Select all companies
+                const allCompanyIds = companiesData.map(company => company.id)
+                setSelectedCompanies(allCompanyIds)
+                break
+            case "tags":
+                // Select all tags
+                setSelectedTags([...availableTags])
+                break
+        }
+    }, [activeTab, companiesData, availableTags])
 
     // Apply filters
     const handleApplyFilters = useCallback(() => {
@@ -297,8 +352,9 @@ export function AdvancedFilters() {
         }).length
 
     const companyFiltersCount = selectedCompanies.length
+    const tagFiltersCount = selectedTags.length
 
-    const totalActiveFilters = regionFiltersCount + companyFiltersCount
+    const totalActiveFilters = regionFiltersCount + companyFiltersCount + tagFiltersCount
 
     return (
         <div className="relative" ref={menuRef}>
@@ -334,14 +390,14 @@ export function AdvancedFilters() {
                     </CardHeader>
 
                     <CardContent className="space-y-4">
-                        {loading || companiesLoading ? (
+                        {loading || companiesLoading || tagsLoading ? (
                             <div className="flex items-center justify-center py-8">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                                 <span className="ml-2">Loading data...</span>
                             </div>
                         ) : (
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                                <TabsList className="grid w-full grid-cols-2">
+                                <TabsList className="grid w-full grid-cols-3">
                                     <TabsTrigger value="regions" className="flex items-center gap-2">
                                         <Globe className="h-4 w-4" />
                                         Regions ({regionFiltersCount})
@@ -349,6 +405,10 @@ export function AdvancedFilters() {
                                     <TabsTrigger value="companies" className="flex items-center gap-2">
                                         <Building className="h-4 w-4" />
                                         Companies ({companyFiltersCount})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="tags" className="flex items-center gap-2">
+                                        <Hash className="h-4 w-4" />
+                                        Tags ({tagFiltersCount})
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -442,19 +502,87 @@ export function AdvancedFilters() {
                                         )}
                                     </div>
                                 </TabsContent>
+
+                                {/* Tags Tab */}
+                                <TabsContent value="tags" className="space-y-4">
+                                    {/* Search Input */}
+                                    <div className="relative">
+                                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search tags..."
+                                            value={tagSearchTerm}
+                                            onChange={(e) => setTagSearchTerm(e.target.value)}
+                                            className="pl-8"
+                                        />
+                                    </div>
+
+                                    <div className="max-h-64 overflow-y-auto space-y-1">
+                                        {tagsLoading ? (
+                                            <div className="flex items-center justify-center py-4">
+                                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                                <span className="ml-2 text-sm">Loading tags...</span>
+                                            </div>
+                                        ) : filteredTags.length > 0 ? (
+                                            filteredTags.map((tag) => (
+                                                <div key={tag} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
+                                                    <Checkbox
+                                                        id={`tag-${tag}`}
+                                                        checked={selectedTags.includes(tag)}
+                                                        onCheckedChange={() => handleTagToggle(tag)}
+                                                    />
+                                                    <label
+                                                        htmlFor={`tag-${tag}`}
+                                                        className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                                                    >
+                                                        {tag.replace(/\b\w/g, (match) => match.toUpperCase())}
+                                                    </label>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-4 text-muted-foreground">
+                                                {tagSearchTerm.trim() ? (
+                                                    <>
+                                                        <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                        <p>No tags found matching "{tagSearchTerm}"</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                        <p>No tags available</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
                             </Tabs>
                         )}
 
                         {/* Action Buttons */}
                         <div className="flex justify-between pt-2 border-t">
-                            <Button variant="outline" size="sm" onClick={handleClearAll} disabled={loading || companiesLoading}>
-                                Clear All
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleClearAll}
+                                    disabled={loading || companiesLoading || tagsLoading}
+                                >
+                                    Clear All
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleSelectAll}
+                                    disabled={loading || companiesLoading || tagsLoading}
+                                >
+                                    Select All
+                                </Button>
+                            </div>
                             <div className="flex gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button size="sm" onClick={handleApplyFilters} disabled={loading || companiesLoading}>
+                                <Button size="sm" onClick={handleApplyFilters} disabled={loading || companiesLoading || tagsLoading}>
                                     Apply
                                 </Button>
                             </div>
