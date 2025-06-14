@@ -77,6 +77,16 @@ export const facilityApi = {
         if (filters.cities?.length) {
             params.append("city", filters.cities.join(","));
         }
+        if (filters.tags?.length) {
+            // Handle multiple tags
+            filters.tags.forEach((tag) => {
+                params.append("tags", tag);
+            });
+            // Add matchAllTags parameter if specified
+            if (filters.matchAllTags !== undefined) {
+                params.append("matchAllTags", filters.matchAllTags);
+            }
+        }
         if (filters.searchTerm) {
             params.append("searchTerm", filters.searchTerm);
         }
@@ -114,6 +124,12 @@ export const facilityApi = {
     // Get facilities by company
     getFacilitiesByCompany: (companyId) =>
         api.get(`/facilities/company/${companyId}`),
+
+    // Get facilities by tag
+    getFacilitiesByTags: (tag) => api.get(`/facilities/tags/${tag}`),
+
+    // Get unique tags
+    getUniqueTags: () => api.get("/facilities/tags"),
 };
 
 export const uploadApi = {
