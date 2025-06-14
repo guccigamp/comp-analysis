@@ -1,6 +1,6 @@
-import { Card } from "../ui/card.jsx"
-import { Building, MapPin, Loader2, AlertCircle } from "lucide-react"
+import { Building, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "../ui/button.jsx"
+import { FacilityCard } from "./FacilityCard.jsx"
 
 export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry }) {
 	if (loading) {
@@ -42,50 +42,12 @@ export function FacilityCardList({ facilities, onSelectFacility, selectedFacilit
 			) : (
 				<div className="space-y-3">
 					{facilities.map((facility) => (
-						<Card
+						<FacilityCard
 							key={facility.id}
-							className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${selectedFacilityId === facility.id ? "ring-2 ring-primary" : ""
-								}`}
-							onClick={() => onSelectFacility(facility)}
-						>
-							<div className="flex items-start gap-3">
-								<div className="p-2 rounded-full mt-1" style={{ backgroundColor: `${facility.color}20` }}>
-									<Building className="h-4 w-4" style={{ color: facility.color }} />
-								</div>
-								<div className="flex-1 min-w-0">
-									<h4 className="font-medium text-sm truncate">{facility.name}</h4>
-									<p className="text-xs text-muted-foreground truncate">{facility.companyName}</p>
-									<div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-										<MapPin className="h-3 w-3" />
-										<span className="truncate">{facility.address}</span>
-									</div>
-									<div className="flex flex-wrap items-center gap-1 mt-1">
-										<span
-											className="text-xs px-2 py-0.5 rounded-full"
-											style={{
-												backgroundColor: `${facility.color}20`,
-												color: facility.color,
-											}}
-										>
-											{facility.state}
-										</span>
-										{facility.tags && facility.tags.length > 0 &&
-											facility.tags.map((tag) => (
-												<span
-													key={tag}
-													className="text-xs px-2 py-0.5 rounded-full"
-													style={{
-														backgroundColor: `${facility.color}20`,
-														color: facility.color,
-													}}
-												>
-													{tag}
-												</span>
-											))}
-									</div>
-								</div>
-							</div>
-						</Card>
+							facility={facility}
+							selectedFacilityId={selectedFacilityId}
+							onSelectFacility={onSelectFacility}
+						/>
 					))}
 				</div>
 			)}

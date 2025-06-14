@@ -18,6 +18,7 @@ export const transformFacilityData = (facilities) => {
         created_at: facility.created_at,
         updated_at: facility.updated_at,
         tags: facility.tags || [],
+        distance: Math.round(facility.distance),
     }));
 };
 

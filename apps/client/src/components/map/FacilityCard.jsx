@@ -1,18 +1,33 @@
 import { Card } from "../ui/card.jsx"
-import { Building } from "lucide-react"
+import { Building, MapPin, Navigation } from "lucide-react"
 
-export function FacilityCard({ facility }) {
+export function FacilityCard({ facility, selectedFacilityId, onSelectFacility }) {
 	return (
-		<Card className="mt-4 p-4">
+		<Card
+			className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${selectedFacilityId === facility.id ? "ring-2 ring-primary" : ""
+				}`}
+			onClick={() => onSelectFacility(facility)}
+		>
 			<div className="flex items-start gap-3">
-				<div className="p-2 rounded-full" style={{ backgroundColor: `${facility.color}20` }}>
-					<Building className="h-5 w-5" style={{ color: facility.color }} />
+				<div className="p-2 rounded-full mt-1" style={{ backgroundColor: `${facility.color}20` }}>
+					<Building className="h-4 w-4" style={{ color: facility.color }} />
 				</div>
-				<div>
-					<h2 className="font-bold">{facility.name}</h2>
-					<h3 className="font-bold">{facility.companyName}</h3>
-					<p className="text-sm text-muted-foreground">{facility.address}</p>
-					<div className="flex flex-wrap items-center gap-2 mt-1">
+				<div className="flex-1 min-w-0">
+					<div className="flex items-center justify-between mb-1">
+						<h4 className="font-medium text-sm truncate">{facility.name}</h4>
+						{facility.distance !== undefined && (
+							<div className="flex items-center gap-1 text-xs font-medium" style={{ color: facility.color }}>
+								<Navigation className="h-3 w-3" />
+								<span>{facility.distance} mi</span>
+							</div>
+						)}
+					</div>
+					<p className="text-xs text-muted-foreground truncate">{facility.companyName}</p>
+					<div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+						<MapPin className="h-3 w-3" />
+						<span className="truncate">{facility.address}</span>
+					</div>
+					<div className="flex flex-wrap items-center gap-1 mt-1">
 						<span
 							className="text-xs px-2 py-0.5 rounded-full"
 							style={{
@@ -22,7 +37,6 @@ export function FacilityCard({ facility }) {
 						>
 							{facility.state}
 						</span>
-
 						{facility.tags && facility.tags.length > 0 &&
 							facility.tags.map((tag) => (
 								<span
