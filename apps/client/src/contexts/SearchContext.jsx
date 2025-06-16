@@ -18,7 +18,7 @@ const initialFilters = {
     selectedCompanies: [DEFAULT_FACILITY_ID],
     selectedStates: [],
     selectedCities: [],
-    proximity: { enabled: false, center: null, radius: 50, unit: "miles" },
+    proximity: { enabled: true, center: null, radius: 50, unit: "miles" },
     advanced: {
         selectedRegions: [],
         selectedStates: [],

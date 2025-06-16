@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react"
 import { Marker, InfoWindow } from "@vis.gl/react-google-maps"
-import { usePinIcon } from "../ui/pin"
+import { getPinIcon } from "../ui/pin"
 import altorLogo from "../../assets/altor-logo.png?url"
+import compLogo from "../../assets/comp-logo.png?url"
 
 // Helper: Convert PNG URL to base64
 async function toBase64(url) {
@@ -14,12 +15,15 @@ async function toBase64(url) {
     })
 }
 
+
 export function MarkerPin({ facilities, selectedFacility, onMarkerClick, onInfoWindowClose }) {
     const [base64Logo, setBase64Logo] = useState(null)
+    const [compBase64Logo, setCompBase64Logo] = useState(null)
 
     // Convert PNG to base64 once
     useEffect(() => {
         toBase64(altorLogo).then(setBase64Logo)
+        toBase64(compLogo).then(setCompBase64Logo)
     }, [])
 
     // InfoWindow options to position it above the marker icon
@@ -38,11 +42,11 @@ export function MarkerPin({ facilities, selectedFacility, onMarkerClick, onInfoW
                     position={{ lat: facility.latitude, lng: facility.longitude }}
                     onClick={() => onMarkerClick(facility)}
                     title={`${facility.name}`}
-                    icon={usePinIcon({
+                    icon={getPinIcon({
                         color: facility.color,
                         size: 36,
                         type: "facility",
-                        logoUrl: base64Logo
+                        logoUrl: facility.companyName === "Altor" ? base64Logo : compBase64Logo
                     })}
                 />
             ))}

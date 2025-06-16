@@ -6,7 +6,6 @@ import { MainMap } from "../components/map/MainMap.jsx"
 import { List } from "../components/list/List.jsx"
 import { FacilityAnalytics } from "../components/analytics/FacilityAnalytics.jsx"
 import { SearchBar } from "../components/search/SearchBar.jsx"
-import { ProximitySettings } from "../components/search/ProximitySettings.jsx"
 import { AdvancedFilters } from "../components/search/AdvancedFilters.jsx"
 
 export default function Dashboard() {
@@ -25,7 +24,6 @@ export default function Dashboard() {
               </div>
               <div className="flex gap-2 mt-2 sm:mt-0">
                 <AdvancedFilters />
-                <ProximitySettings />
               </div>
             </div>
           </div>

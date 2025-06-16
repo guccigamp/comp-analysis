@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react"
 import { useMap, Marker } from "@vis.gl/react-google-maps"
-import { usePinIcon } from "../ui/pin.jsx"
+import { getPinIcon } from "../ui/pin.jsx"
 
 export function ProximityCircle({ center, radius, unit }) {
     const map = useMap()
     const circleRef = useRef(null)
-    const proximityIcon = usePinIcon("#4f46e5", 28, "proximity")
+    const proximityIcon = getPinIcon({ color: "#4f46e5", size: 28, type: "proximity" })
 
     useEffect(() => {
         if (!map || !center) return

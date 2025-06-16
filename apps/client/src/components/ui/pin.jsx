@@ -1,5 +1,3 @@
-"use client"
-
 import { useMemo } from "react"
 
 // Base pin SVG template with customizable elements
@@ -55,4 +53,25 @@ export function usePinIcon({ color = "#4f46e5", size = 24, type = "facility", lo
 
     return { url }
   }, [color, size, type, logoUrl])
+}
+
+// NEW: Non-hook helper to generate (and memoise) pin icons at arbitrary call sites (e.g. inside loops)
+const _iconCache = new Map()
+export function getPinIcon({ color = "#4f46e5", size = 24, type = "facility", logoUrl = null }) {
+  const cacheKey = `${color}-${size}-${type}-${logoUrl ?? "none"}`
+  if (_iconCache.has(cacheKey)) return _iconCache.get(cacheKey)
+
+  const width = size
+  const height = size * 1.2
+
+  let url
+  if (type === "facility" && logoUrl) {
+    url = createFacilityPinSvg({ width, height, color, logoUrl })
+  } else {
+    url = createPinSvg({ width, height, color, type, logoUrl })
+  }
+
+  const icon = { url }
+  _iconCache.set(cacheKey, icon)
+  return icon
 }

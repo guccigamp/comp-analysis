@@ -58,13 +58,12 @@ export function MainMap() {
                     loading={loading}
                     error={error}
                     onRetry={refreshData}
+
                 />
             </div>
 
-            {/* Proximity map below the main grid to utilize full available width */}
-            {selectedFacility && filters.proximity?.enabled && filters.proximity?.center && (
-                <ProximityMap centerFacility={selectedFacility} />
-            )}
+            {/* Always show ProximityMap */}
+            <ProximityMap centerFacility={selectedFacility} />
         </>
     )
 }

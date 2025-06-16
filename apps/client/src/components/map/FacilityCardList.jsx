@@ -2,7 +2,7 @@ import { Building, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "../ui/button.jsx"
 import { FacilityCard } from "./FacilityCard.jsx"
 
-export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry }) {
+export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry, isProximity }) {
 	if (loading) {
 		return (
 			<div className="border rounded-lg p-4 h-[500px] flex items-center justify-center">
@@ -47,6 +47,7 @@ export function FacilityCardList({ facilities, onSelectFacility, selectedFacilit
 							facility={facility}
 							selectedFacilityId={selectedFacilityId}
 							onSelectFacility={onSelectFacility}
+							isProximity={isProximity}
 						/>
 					))}
 				</div>
