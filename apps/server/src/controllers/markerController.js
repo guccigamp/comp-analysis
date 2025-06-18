@@ -39,7 +39,7 @@ const getMarkers = async (req, res) => {
           {/* Inner white circle */}
           <circle cx="60" cy="60" r="45" fill="white" />
 
-          {/* Alleguard logo inside the circle - centered */}
+          {/* logo inside the circle - centered */}
           <image
             href="${logoURL}"
             x="15"

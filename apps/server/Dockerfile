@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-bookworm AS builder
 
 WORKDIR /app
 
@@ -12,14 +12,18 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Install Playwright browser binaries and required system dependencies in the builder (to leverage layer caching)
+RUN npx playwright install --with-deps
+
 # Production stage
-FROM node:20-alpine
+FROM node:20-bookworm
 
 WORKDIR /app
 
-# Copy package files and install production dependencies only
+# Copy package files and install only production deps (includes Playwright runtime)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --only=production && \
+    npx playwright install --with-deps
 
 # Copy built application from builder stage
 COPY --from=builder /app/src ./src

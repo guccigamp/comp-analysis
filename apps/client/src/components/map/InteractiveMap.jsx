@@ -4,6 +4,9 @@ import { MarkerPin } from "./MarkerPin.jsx"
 import { ProximityCircle } from "./ProximityCircle.jsx"
 import { MapLoadingState } from "./MapLoadingState.jsx"
 import { MapErrorState } from "./MapErrorState.jsx"
+import { Button } from "../ui/button.jsx" // 
+import { Download, Loader2 } from "lucide-react"
+
 
 export function InteractiveMap({
     facilities = [],
@@ -28,6 +31,8 @@ export function InteractiveMap({
     const [mapZoom, setMapZoom] = useState(zoom)
     const isProgrammaticChange = useRef(false)
     const [mapError, setMapError] = useState(null)
+    const [isDownloadingMap, setIsDownloadingMap] = useState(false)
+    const mapContainerRef = useRef(null)
 
     const updateMapPosition = useCallback((facility) => {
         isProgrammaticChange.current = true
@@ -82,7 +87,50 @@ export function InteractiveMap({
         }
     }, [])
 
-    if (loading) {
+    const handleDownloadMapClick = useCallback(async () => {
+        setIsDownloadingMap(true)
+
+        try {
+            const { width, height } = mapContainerRef.current
+                ? {
+                    width: Math.round(mapContainerRef.current.offsetWidth),
+                    height: Math.round(mapContainerRef.current.offsetHeight),
+                }
+                : { width: 1280, height: 720 }
+
+            const response = await fetch("http://localhost:8000/api/map/screenshot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    center: mapCenter,
+                    zoom: mapZoom,
+                    facilities: facilities.map((f) => ({ latitude: f.latitude, longitude: f.longitude, color: f.color, companyName: f.companyName })),
+                    mapId: import.meta.env.VITE_MAP_ID,
+                    width,
+                    height,
+                }),
+            })
+            if (!response.ok) {
+                throw new Error("Server responded with " + response.status)
+            }
+            const blob = await response.blob()
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+            link.href = url
+            link.download = `map-playwright-${timestamp}.png`
+            link.click()
+            URL.revokeObjectURL(url)
+        } catch (serverErr) {
+            console.error("Server-side screenshot failed", serverErr)
+            alert("Unable to generate map screenshot.")
+        }
+
+        setIsDownloadingMap(false)
+    }, [mapCenter, mapZoom, facilities])
+
+    if (loading && !isMapLoading) {
+        // Show main loading if data is loading, but map itself has loaded
         return (
             <div className={`w-full rounded-lg border overflow-hidden relative z-10 ${className}`} style={{ height }}>
                 <MapLoadingState />
@@ -117,7 +165,8 @@ export function InteractiveMap({
     }
 
     return (
-        <div className={`w-full rounded-lg border overflow-hidden relative z-10 ${className}`} style={{ height }}>
+        <div ref={mapContainerRef} className={`w-full rounded-lg border overflow-hidden relative z-10 ${className}`} style={{ height }}>
+
             <APIProvider apiKey={apiKey || ""} >
                 <GoogleMapComponent
                     center={mapCenter}
@@ -142,6 +191,19 @@ export function InteractiveMap({
                     )}
                 </GoogleMapComponent>
             </APIProvider>
+            {/* Download Button */}
+            <div className="absolute top-2 left-2 z-20">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadMapClick}
+                    disabled={isDownloadingMap}
+                    className="bg-white hover:bg-gray-100 text-gray-800 shadow"
+                >
+                    {isDownloadingMap ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                    Download Map
+                </Button>
+            </div>
         </div>
     )
 }

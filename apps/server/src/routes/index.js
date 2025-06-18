@@ -5,6 +5,7 @@ import templateRoutes from "./templateRoutes.js";
 import uploadRoutes from "./uploadRoutes.js";
 import authRoutes from "./authRoutes.js";
 import markerRoutes from "./markerRoutes.js";
+import screenshotRoutes from "./screenshotRoutes.js";
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use("/templates", templateRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/auth", authRoutes);
 router.use("", markerRoutes);
+router.use("/map", screenshotRoutes);
 
 export default router;
