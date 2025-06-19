@@ -6,6 +6,7 @@ import { MapLoadingState } from "./MapLoadingState.jsx"
 import { MapErrorState } from "./MapErrorState.jsx"
 import { Button } from "../ui/button.jsx" // 
 import { Download, Loader2 } from "lucide-react"
+import { mapApi } from "../../lib/api.js"
 
 
 export function InteractiveMap({
@@ -98,22 +99,17 @@ export function InteractiveMap({
                 }
                 : { width: 1280, height: 720 }
 
-            const response = await fetch("http://localhost:8000/api/map/screenshot", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    center: mapCenter,
-                    zoom: mapZoom,
-                    facilities: facilities.map((f) => ({ latitude: f.latitude, longitude: f.longitude, color: f.color, companyName: f.companyName })),
-                    mapId: import.meta.env.VITE_MAP_ID,
-                    width,
-                    height,
-                }),
-            })
-            if (!response.ok) {
-                throw new Error("Server responded with " + response.status)
+            const payload = {
+                center: mapCenter,
+                zoom: mapZoom,
+                facilities: facilities.map((f) => ({ latitude: f.latitude, longitude: f.longitude, color: f.color, companyName: f.companyName })),
+                mapId: import.meta.env.VITE_MAP_ID,
+                width,
+                height,
             }
-            const blob = await response.blob()
+
+            const response = await mapApi.screenshot(payload)
+            const blob = response.data
             const url = URL.createObjectURL(blob)
             const link = document.createElement("a")
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-")

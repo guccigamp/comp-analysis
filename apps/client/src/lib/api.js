@@ -183,4 +183,15 @@ export const markerApi = {
     },
 };
 
+// Map-related endpoints
+export const mapApi = {
+    /**
+     * Request a static screenshot of the map from the server-side Playwright service.
+     * @param {object} payload – center, zoom, facilities, mapId, width, height
+     * @returns {Promise<AxiosResponse<Blob>>} PNG image blob
+     */
+    screenshot: (payload) =>
+        api.post("/map/screenshot", payload, { responseType: "blob" }),
+};
+
 export default api;
