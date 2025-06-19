@@ -29,8 +29,8 @@ RUN npm ci --only=production && \
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/server.js ./
 
-# Create a non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Create a non-root user if it's not already present
+RUN id -u appuser 2>/dev/null || (addgroup -S appgroup && adduser -S appuser -G appgroup)
 USER appuser
 
 # Expose port
