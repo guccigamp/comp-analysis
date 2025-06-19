@@ -13,7 +13,7 @@ RUN npm ci
 COPY . .
 
 # Install Playwright browser binaries and required system dependencies in the builder (to leverage layer caching)
-RUN npx playwright install --with-deps
+RUN npx playwright install chromium --with-deps
 
 # Production stage
 FROM node:20-bookworm
@@ -23,7 +23,7 @@ WORKDIR /app
 # Copy package files and install only production deps (includes Playwright runtime)
 COPY package*.json ./
 RUN npm ci --only=production && \
-    npx playwright install --with-deps
+    npx playwright install chromium --with-deps
 
 # Copy built application from builder stage
 COPY --from=builder /app/src ./src
@@ -38,6 +38,9 @@ EXPOSE 8000
 # Set default environment variables
 ENV NODE_ENV=production
 ENV PORT=8000
+
+# Copy the Playwright cache from the builder
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Start production server
 CMD ["npm", "start"] 
