@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.jsx"
 import { MetricCards } from "./MetricCards.jsx"
-import { CompanyChart } from "./CompanyChart.jsx"
-import { StateChart } from "./StateChart.jsx"
-import { CompanyPieChart } from "./CompanyPieChart.jsx"
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react"
+import { StateHeatMap } from "./StateHeatMap.jsx"
+import { CompetitorHeatMap } from "./CompetitorHeatMap.jsx"
+import { MarketShareAnalysis } from "./MarketShareAnalysis.jsx"
+import { TagAnalysis } from "./TagAnalysis.jsx"
+import { Loader2, AlertCircle, RefreshCw, Map, PieChart, Tag, BarChart3 } from "lucide-react"
 import { Button } from "../ui/button.jsx"
-import { companyApi } from "../../lib/api.js"
+import { companyApi, facilityApi } from "../../lib/api.js"
 import { transformCompanyData, getCompanySummaries, getStateSummaries } from "../../utils/facility-utils.js"
 
 export function FacilityAnalytics() {
   const [companies, setCompanies] = useState([])
   const [facilities, setFacilities] = useState([])
+  const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -24,8 +26,13 @@ export function FacilityAnalytics() {
         setError(null)
 
         // Get all companies with their facilities for analytics
-        const response = await companyApi.getAllCompanies()
-        const transformedCompanies = transformCompanyData(response.data)
+        const [companiesResponse, tagsResponse] = await Promise.all([
+          companyApi.getAllCompanies(),
+          facilityApi.getUniqueTags(),
+        ])
+
+        const transformedCompanies = transformCompanyData(companiesResponse.data)
+        const tagsList = tagsResponse.data.map((tagObj) => tagObj.tag) || []
 
         // Extract all facilities from companies
         const allFacilities = transformedCompanies.flatMap((company) =>
@@ -39,6 +46,7 @@ export function FacilityAnalytics() {
 
         setCompanies(transformedCompanies)
         setFacilities(allFacilities)
+        setTags(tagsList)
       } catch (err) {
         console.error("Error loading analytics data:", err)
         setError("Failed to load analytics data")
@@ -54,14 +62,16 @@ export function FacilityAnalytics() {
   const handleRefresh = () => {
     setCompanies([])
     setFacilities([])
+    setTags([])
     setLoading(true)
     setError(null)
 
     // Re-fetch data
-    companyApi
-      .getAllCompanies()
-      .then((response) => {
-        const transformedCompanies = transformCompanyData(response.data)
+    Promise.all([companyApi.getAllCompanies(), facilityApi.getUniqueTags()])
+      .then(([companiesResponse, tagsResponse]) => {
+        const transformedCompanies = transformCompanyData(companiesResponse.data)
+        const tagsList = tagsResponse.data.map((tagObj) => tagObj.tag) || []
+
         const allFacilities = transformedCompanies.flatMap((company) =>
           company.facilities.map((facility) => ({
             ...facility,
@@ -73,6 +83,7 @@ export function FacilityAnalytics() {
 
         setCompanies(transformedCompanies)
         setFacilities(allFacilities)
+        setTags(tagsList)
         setLoading(false)
       })
       .catch((err) => {
@@ -81,6 +92,14 @@ export function FacilityAnalytics() {
         setLoading(false)
       })
   }
+
+  // Prepare data for metrics
+  const companySummaries = useMemo(() => getCompanySummaries(companies), [companies])
+  const stateSummaries = useMemo(() => getStateSummaries(facilities), [facilities])
+  const totalFacilities = facilities.length
+  const totalCompanies = companies.length
+  const averageFacilitiesPerCompany = totalCompanies > 0 ? totalFacilities / totalCompanies : 0
+  const topCompany = companySummaries.length > 0 ? companySummaries[0] : null
 
   if (loading) {
     return (
@@ -108,13 +127,6 @@ export function FacilityAnalytics() {
     )
   }
 
-  // Prepare data for charts
-  const companySummaries = getCompanySummaries(companies)
-  const stateSummaries = getStateSummaries(facilities)
-  const totalFacilities = facilities.length
-  const totalCompanies = companies.length
-  const averageFacilitiesPerCompany = totalCompanies > 0 ? totalFacilities / totalCompanies : 0
-
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -130,23 +142,48 @@ export function FacilityAnalytics() {
         <MetricCards
           totalFacilities={totalFacilities}
           totalCompanies={totalCompanies}
-          averageFacilitiesPerCompany={averageFacilitiesPerCompany}
+          topCompany={topCompany}
+          averageFacilities={averageFacilitiesPerCompany}
         />
 
-        <Tabs defaultValue="companies" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="companies">Companies</TabsTrigger>
-            <TabsTrigger value="states">States</TabsTrigger>
-            <TabsTrigger value="distribution">Distribution</TabsTrigger>
+        <Tabs defaultValue="state-map" className="mt-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="state-map" className="flex items-center gap-2">
+              <Map className="h-4 w-4" />
+              <span className="hidden sm:inline">State Distribution</span>
+              <span className="sm:hidden">States</span>
+            </TabsTrigger>
+            <TabsTrigger value="competitors" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Competitor Analysis</span>
+              <span className="sm:hidden">Competitors</span>
+            </TabsTrigger>
+            <TabsTrigger value="market-share" className="flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Market Share</span>
+              <span className="sm:hidden">Market</span>
+            </TabsTrigger>
+            <TabsTrigger value="tags" className="flex items-center gap-2">
+              <Tag className="h-4 w-4" />
+              <span className="hidden sm:inline">Tag Analysis</span>
+              <span className="sm:hidden">Tags</span>
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="companies" className="pt-4">
-            <CompanyChart companySummaries={companySummaries} />
+
+          <TabsContent value="state-map" className="pt-4">
+            <StateHeatMap facilities={facilities} stateSummaries={stateSummaries} />
           </TabsContent>
-          <TabsContent value="states" className="pt-4">
-            <StateChart stateSummaries={stateSummaries} />
+
+          <TabsContent value="competitors" className="pt-4">
+            <CompetitorHeatMap facilities={facilities} companies={companies} />
           </TabsContent>
-          <TabsContent value="distribution" className="pt-4">
-            <CompanyPieChart companySummaries={companySummaries} />
+
+          <TabsContent value="market-share" className="pt-4">
+            <MarketShareAnalysis facilities={facilities} companies={companies} />
+          </TabsContent>
+
+          <TabsContent value="tags" className="pt-4">
+            <TagAnalysis facilities={facilities} tags={tags} companies={companies} />
           </TabsContent>
         </Tabs>
       </CardContent>
