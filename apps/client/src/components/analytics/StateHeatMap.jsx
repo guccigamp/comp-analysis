@@ -139,10 +139,15 @@ export function StateHeatMap({ facilities, stateSummaries: initialSateSummaries 
         }))
     }, [sortedStateSummaries, stateNames])
 
-    // List of state abbreviations that have facilities
+    // List of state abbreviations that have facilities (derived from facilities array)
     const statesWithFacilities = useMemo(() => {
-        return Object.keys(stateData).filter((abbr) => stateData[abbr] && stateData[abbr] > 0)
-    }, [stateData])
+        const set = new Set()
+        facilities.forEach((fac) => {
+            const abbr = stateAbbreviations[fac.state] || fac.state
+            set.add(abbr)
+        })
+        return Array.from(set).sort()
+    }, [facilities])
 
     // Ensure default selection exists
     useEffect(() => {
@@ -209,7 +214,7 @@ export function StateHeatMap({ facilities, stateSummaries: initialSateSummaries 
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a state" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="max-h-60 overflow-y-auto">
                                     {statesWithFacilities.map((abbr) => (
                                         <SelectItem key={abbr} value={abbr}>
                                             {stateNames[abbr] || abbr}
