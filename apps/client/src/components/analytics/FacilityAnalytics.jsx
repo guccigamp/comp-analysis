@@ -5,8 +5,7 @@ import { MetricCards } from "./MetricCards.jsx"
 import { StateHeatMap } from "./StateHeatMap.jsx"
 import { CompetitorHeatMap } from "./CompetitorHeatMap.jsx"
 import { MarketShareAnalysis } from "./MarketShareAnalysis.jsx"
-import { TagAnalysis } from "./TagAnalysis.jsx"
-import { Loader2, AlertCircle, RefreshCw, Map, PieChart, Tag, BarChart3 } from "lucide-react"
+import { Loader2, AlertCircle, RefreshCw, Map, PieChart, BarChart3 } from "lucide-react"
 import { Button } from "../ui/button.jsx"
 import { companyApi, facilityApi } from "../../lib/api.js"
 import { transformCompanyData, getCompanySummaries, getStateSummaries } from "../../utils/facility-utils.js"
@@ -147,7 +146,7 @@ export function FacilityAnalytics() {
         />
 
         <Tabs defaultValue="state-map" className="mt-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="state-map" className="flex items-center gap-2">
               <Map className="h-4 w-4" />
               <span className="hidden sm:inline">State Distribution</span>
@@ -163,11 +162,6 @@ export function FacilityAnalytics() {
               <span className="hidden sm:inline">Market Share</span>
               <span className="sm:hidden">Market</span>
             </TabsTrigger>
-            <TabsTrigger value="tags" className="flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              <span className="hidden sm:inline">Tag Analysis</span>
-              <span className="sm:hidden">Tags</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="state-map" className="pt-4">
@@ -180,10 +174,6 @@ export function FacilityAnalytics() {
 
           <TabsContent value="market-share" className="pt-4">
             <MarketShareAnalysis facilities={facilities} companies={companies} />
-          </TabsContent>
-
-          <TabsContent value="tags" className="pt-4">
-            <TagAnalysis facilities={facilities} tags={tags} companies={companies} />
           </TabsContent>
         </Tabs>
       </CardContent>

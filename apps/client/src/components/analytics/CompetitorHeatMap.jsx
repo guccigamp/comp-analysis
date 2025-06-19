@@ -193,20 +193,20 @@ export function CompetitorHeatMap({ facilities, companies }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Competitor Analysis</CardTitle>
-                <CardDescription>Analyze competitor presence relative to your facilities</CardDescription>
+                <CardTitle>Analyzing Competitor Presence</CardTitle>
+                <CardDescription>View competitor density across states with an interactive heat map and detailed breakdown. States with your company presence are highlighted in orange.</CardDescription>
             </CardHeader>
             <CardContent>
                 {/* Tabs wrapper starts */}
                 <Tabs value={viewMode} onValueChange={setViewMode} className="w-full">
                     <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <label className="text-sm font-medium mb-2 block">Select Your Company</label>
                         <div className="w-full md:w-1/3">
-                            <label className="text-sm font-medium mb-2 block">Select Your Company</label>
                             <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a company" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="max-h-60 overflow-y-auto">
                                     {companies.map((company) => (
                                         <SelectItem key={company.id} value={company.id}>
                                             {company.name}

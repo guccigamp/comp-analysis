@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import fs from "fs";
 
-dotenv.config({ path: "../../.env.local" });
+dotenv.config({ path: "../../.env" });
 // This file is now simplified - pin creation is handled by the Pin component
 // Keep any other map-related utilities here if needed in the future
 
@@ -40,8 +40,9 @@ async function buildMarker({
 export async function buildStaticMap(
     center = { lat: 0, lng: 0 },
     facilities = [], // array of facility objects
-    apiKey = process.env.VITE_GOOGLE_MAPS_STATIC_API,
-    mapId = process.env.VITE_MAP_ID,
+    apiKey = "AIzaSyCkTew7ldqVZCn7MoLmgXE2aWE6UnK5mGI" ||
+        process.env.VITE_GOOGLE_MAPS_STATIC_API,
+    mapId = "80ceb4ae8adf7dd0" || process.env.VITE_MAP_ID,
     zoom = 5,
     scale = 2,
     size = "1280x1280",
@@ -58,7 +59,7 @@ export async function buildStaticMap(
         zoom,
         size,
         maptype,
-        format: "gif",
+        format: "png",
         scale,
         // turn off POI labels for cleaner report
         // style: "feature:all|element:labels|visibility:off",
