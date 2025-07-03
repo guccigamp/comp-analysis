@@ -3,6 +3,7 @@ import { Readable } from "stream";
 import Company from "../models/companyModel.js";
 import Facility from "../models/facilityModel.js";
 import geocodingService from "../services/geocodingService.js";
+import User from "../models/userModel.js";
 
 /**
  * Upload and process CSV file with company and facility data
@@ -296,6 +297,10 @@ const uploadCSV = async (req, res) => {
                             );
                             return existingFacility;
                         }
+                        const userIds =
+                            req.user.role === "admin"
+                                ? await User.find().map((user) => user._id)
+                                : [req.user.id];
 
                         const facility = new Facility({
                             companyId: company._id,
@@ -309,6 +314,7 @@ const uploadCSV = async (req, res) => {
                                 coordinates: facilityData.coordinates,
                             },
                             tags: facilityData.tags,
+                            access: userIds,
                         });
                         return await facility.save();
                     }

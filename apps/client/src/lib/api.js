@@ -134,11 +134,11 @@ export const facilityApi = {
 
 export const uploadApi = {
     // Upload CSV file
-    uploadCSV: (file) => {
+    upload: (file) => {
         const formData = new FormData();
         formData.append("file", file);
 
-        return api.post("/upload/csv", formData, {
+        return api.post("/upload", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
@@ -181,17 +181,6 @@ export const markerApi = {
             responseType: "blob",
         });
     },
-};
-
-// Map-related endpoints
-export const mapApi = {
-    /**
-     * Request a static screenshot of the map from the server-side Playwright service.
-     * @param {object} payload – center, zoom, facilities, mapId, width, height
-     * @returns {Promise<AxiosResponse<Blob>>} PNG image blob
-     */
-    screenshot: (payload) =>
-        api.post("/map/screenshot", payload, { responseType: "blob" }),
 };
 
 export default api;

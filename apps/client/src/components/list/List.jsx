@@ -10,9 +10,9 @@ import { useToast } from "../../hooks/use-toast.js"
 import { uploadApi, templateApi } from "../../lib/api.js"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu.jsx"
 
-
-
 export function List() {
+
+
     const [sortField, setSortField] = useState("companyName")
     const [sortDirection, setSortDirection] = useState("asc")
     const [isExporting, setIsExporting] = useState(false)
@@ -115,7 +115,7 @@ export function List() {
 
         setIsUploading(true)
         try {
-            const response = await uploadApi.uploadCSV(file)
+            const response = await uploadApi.upload(file)
             const result = response.data
 
             toast({

@@ -7,14 +7,15 @@ import {
     removeDuplicateTags,
     getTagStatistics,
 } from "../utils/tagHelpers.js";
+import User from "../models/userModel.js";
 
 // Get all facilities
 export const getAllFacilities = async (req, res, next) => {
     try {
-        const facilities = await Facility.find({ active: true }).populate(
-            "companyId",
-            "name legend_color"
-        );
+        const facilities = await Facility.find({
+            active: true,
+            access: req.user._id,
+        }).populate("companyId", "name legend_color");
 
         res.status(200).json(facilities);
     } catch (error) {
@@ -25,10 +26,11 @@ export const getAllFacilities = async (req, res, next) => {
 // Get facility by ID
 export const getFacilityById = async (req, res, next) => {
     try {
-        const facility = await Facility.findById(req.params.id).populate(
-            "companyId",
-            "name legend_color"
-        );
+        const facility = await Facility.find({
+            _id: req.params.id,
+            active: true,
+            access: req.user.id,
+        }).populate("companyId", "name legend_color");
 
         if (!facility) {
             return res.status(404).json({ message: "Facility not found" });
@@ -88,6 +90,8 @@ export const createFacility = async (req, res, next) => {
         if (!company) {
             return res.status(404).json({ message: "Company not found" });
         }
+        const users = await User.find();
+        const userIds = users.map((user) => user._id);
 
         const facility = new Facility({
             ...facilityData,
@@ -102,6 +106,7 @@ export const createFacility = async (req, res, next) => {
                 type: "Point",
                 coordinates: [longitude, latitude], // GeoJSON uses [longitude, latitude]
             },
+            access: userIds, // Give access to all users
         });
 
         await facility.save();
@@ -177,6 +182,12 @@ export const findFacilitiesNearby = async (req, res, next) => {
 
         const pipeline = [
             {
+                $match: {
+                    active: true,
+                    access: req.user._id,
+                },
+            },
+            {
                 $geoNear: {
                     near: {
                         type: "Point",
@@ -249,6 +260,7 @@ export const findFacilitiesByState = async (req, res, next) => {
         const facilities = await Facility.find({
             active: true,
             state: { $regex: new RegExp(state, "i") },
+            access: req.user._id,
         }).populate("companyId", "name legend_color");
 
         res.status(200).json(facilities);
@@ -265,6 +277,7 @@ export const findFacilitiesByCompany = async (req, res, next) => {
         const facilities = await Facility.find({
             active: true,
             companyId,
+            access: req.user._id,
         }).populate("companyId", "name legend_color");
 
         res.status(200).json(facilities);
@@ -288,23 +301,27 @@ export const getFilteredFacilities = async (req, res, next) => {
             unit = "miles",
         } = req.query;
 
-        // Build match stage for filtering
-        let matchStage = { active: true };
+        // Build match stage for filtering – always include current user.
+        let matchStage = {
+            active: true,
+            access: req.user._id,
+        };
 
-        // Add company filter
+        // Add company filter – accept multiple IDs separated by comma or pipe, or repeated params
         if (companyId) {
-            const companyIds = Array.isArray(companyId)
+            const rawIds = Array.isArray(companyId)
                 ? companyId
-                : companyId.split(",");
-            // Convert string IDs to ObjectIds
+                : companyId.split(/[,|]/);
             matchStage.companyId = {
-                $in: companyIds.map((id) => new mongoose.Types.ObjectId(id)),
+                $in: rawIds.map((id) => new mongoose.Types.ObjectId(id)),
             };
         }
 
         // Add state filter
         if (state) {
-            const stateList = Array.isArray(state) ? state : state.split(",");
+            const stateList = Array.isArray(state)
+                ? state
+                : state.split(/[,|]/);
             matchStage.state = {
                 $in: stateList.map((s) => new RegExp(s, "i")),
             };
@@ -316,16 +333,16 @@ export const getFilteredFacilities = async (req, res, next) => {
             matchStage.city = { $in: cityList.map((c) => new RegExp(c, "i")) };
         }
 
-        // Build aggregation pipeline
+        // -------- Aggregation pipeline --------
         const pipeline = [];
 
-        // Add $geoNear stage if coordinates are provided
         if (latitude && longitude) {
+            // $geoNear **must** be the first stage in the pipeline per MongoDB docs.
             const radiusInMeters = radius
                 ? unit === "kilometers"
                     ? radius * 1000
                     : radius * 1609.34
-                : 1000000; // Default to 1000km if no radius specified
+                : 1_000_000; // default 1000 km
 
             pipeline.push({
                 $geoNear: {
@@ -339,11 +356,11 @@ export const getFilteredFacilities = async (req, res, next) => {
                     distanceField: "distance",
                     spherical: true,
                     maxDistance: radiusInMeters,
-                    query: matchStage,
+                    query: matchStage, // All filters must be in the query field for $geoNear
                 },
             });
         } else {
-            // If no coordinates, just use the match stage
+            // For non-geo queries, start with $match
             pipeline.push({ $match: matchStage });
         }
 
@@ -381,6 +398,7 @@ export const getFilteredFacilities = async (req, res, next) => {
                 "companyId.name": 1,
                 "companyId.legend_color": 1,
                 distance: 1,
+                access: 1,
             },
         });
 
@@ -417,7 +435,10 @@ export const getFilteredFacilities = async (req, res, next) => {
 // Get all unique tags
 export const getAllTags = async (req, res, next) => {
     try {
-        const facilities = await Facility.find({ active: true });
+        const facilities = await Facility.find({
+            active: true,
+            access: req.user._id,
+        });
         const { tagCounts } = getTagStatistics(facilities);
 
         // Convert to array of { tag, count } objects and sort by count
@@ -440,6 +461,7 @@ export const getFacilitiesByTag = async (req, res, next) => {
         let query = {
             active: true,
             tags: { $regex: new RegExp(tag, "i") },
+            access: req.user.id,
         };
 
         // Filter by company if provided

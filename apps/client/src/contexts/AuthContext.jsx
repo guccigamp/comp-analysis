@@ -44,7 +44,7 @@ export function AuthProvider({ children }) {
             const { token: jwt } = res.data;
             setToken(jwt);
             // Store minimal user info returned from API
-            setUser({ id: res.data._id });
+            setUser({ id: res.data._id, role: res.data.role });
             return res.data;
         } catch (err) {
             // Propagate error to caller

@@ -88,6 +88,11 @@ const facilitySchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        access: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "User",
+            default: [], // Will be populated in controller
+        },
         created_at: {
             type: Date,
             default: Date.now,
