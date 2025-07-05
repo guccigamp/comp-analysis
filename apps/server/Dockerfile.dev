@@ -6,9 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install node dependencies (includes Playwright package already declared in package.json)
-RUN npm install && \
-    # Install Playwright browser binaries and required system dependencies in one go
-    npx playwright install --with-deps
+RUN npm install
 
 # Copy application source code
 COPY . .
