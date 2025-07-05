@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom"
-import { Eye, BarChart3, Database, ChevronDown, LogOut, Settings } from "lucide-react"
+import { Eye, BarChart3, Database, Users, ChevronDown, LogOut, Settings } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -13,12 +13,7 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "./ui/sidebar.jsx"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "./ui/dropdown-menu.jsx"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu.jsx"
 import { Avatar, AvatarFallback } from "./ui/avatar.jsx"
 import { useAuth } from "../contexts/AuthContext.jsx"
 
@@ -28,25 +23,35 @@ const navigationItems = [
         url: "/",
         icon: Eye,
         description: "Map and list view of facilities",
+        isAdminOnly: false,
     },
     {
         title: "HawkEye Analytics",
         url: "/analytics",
         icon: BarChart3,
         description: "Analytics and insights dashboard",
+        isAdminOnly: false,
     },
     {
         title: "Manage Data",
         url: "/manage-data",
         icon: Database,
         description: "Upload and manage facility data",
+        isAdminOnly: true,
+    },
+    {
+        title: "Manage Users",
+        url: "/manage-users",
+        icon: Users,
+        description: "Manage user accounts and permissions",
+        isAdminOnly: true,
     },
 ]
 
 export function AppSidebar() {
     const location = useLocation()
     const navigate = useNavigate()
-    const { user, logout } = useAuth()
+    const { user, logout, isAdmin } = useAuth()
     const handleNavigation = (url) => {
         navigate(url)
     }
@@ -82,7 +87,7 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {navigationItems.map((item) => (
+                            {navigationItems.filter((item) => !item.isAdminOnly || isAdmin).map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton
                                         onClick={() => handleNavigation(item.url)}

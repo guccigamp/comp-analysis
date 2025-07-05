@@ -14,8 +14,13 @@ const generateToken = (userId) => {
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password, employeeId, adminInviteToken } =
-            req.body;
+        const { name, email, password, role, employeeId } = req.body;
+
+        // If employeeId already exists
+        const employeeIdExists = await User.findOne({ employeeId });
+        if (employeeIdExists) {
+            res.status(400).json({ message: "Employee ID already exists" });
+        }
 
         // If user already exists
         const userExists = await User.findOne({ email });
@@ -23,17 +28,7 @@ export const registerUser = async (req, res) => {
             res.status(400).json({ message: "User already exists" });
         }
 
-        // Determine user role: Admin if correct token is provided, otherwise Member
-        let role = "user";
-        if (
-            adminInviteToken &&
-            adminInviteToken == process.env.ADMIN_INVITE_TOKEN
-        ) {
-            role = "admin";
-        }
-
         // Hash Password
-
         const hashedPassword = await bcrypt.hash(password, 8);
 
         // Create new User
@@ -41,8 +36,8 @@ export const registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            employeeId,
             role,
+            employeeId,
         });
 
         // Return user data with JWT
@@ -100,6 +95,27 @@ export const updateUserProfile = async (req, res) => {
             ? await bcrypt.hash(req.body.password, 8)
             : user.password;
 
+        const updateUser = await user.save();
+        res.json({
+            _id: updateUser._id,
+            name: updateUser.name,
+            email: updateUser.email,
+            role: updateUser.role,
+            employeeId: updateUser.employeeId,
+            token: generateToken(updateUser._id),
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const changePassword = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        user.password = await bcrypt.hash(req.body.password, 8);
         const updateUser = await user.save();
         res.json({
             _id: updateUser._id,

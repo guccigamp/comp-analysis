@@ -13,6 +13,7 @@ import {
 import HawkEyeVision from "./HawkEyeVision.jsx"
 import HawkEyeAnalytics from "./HawkEyeAnalytics.jsx"
 import ManageData from "./ManageData.jsx"
+import ManageUsers from "./ManageUsers.jsx"
 
 export default function Dashboard() {
   const location = useLocation()
@@ -25,6 +26,8 @@ export default function Dashboard() {
         return "HawkEye Analytics"
       case "/manage-data":
         return "Manage Data"
+      case "/manage-users":
+        return "Manage Users"
       default:
         return "Dashboard"
     }
@@ -54,6 +57,7 @@ export default function Dashboard() {
           <Route path="/" element={<HawkEyeVision />} />
           <Route path="/analytics" element={<HawkEyeAnalytics />} />
           <Route path="/manage-data" element={<ManageData />} />
+          <Route path="/manage-users" element={<ManageUsers />} />
         </Routes>
       </SidebarInset>
     </SidebarProvider>

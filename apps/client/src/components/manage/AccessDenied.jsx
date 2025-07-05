@@ -5,8 +5,8 @@ export default function AccessDenied() {
     return (
         <div className="flex flex-1 flex-col gap-4 p-4">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight">Manage Data</h1>
-                <p className="text-muted-foreground">Upload, manage, and organize your facility data</p>
+                <h1 className="text-2xl font-bold tracking-tight">Access Denied</h1>
+                <p className="text-muted-foreground">You do not have permission to access this page</p>
             </div>
 
             <Card className="border-amber-200 bg-amber-50">

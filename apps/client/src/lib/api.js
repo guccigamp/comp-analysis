@@ -25,7 +25,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        console.error("API Error:", error.response?.data || error.message);
+        if (error.response?.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/login";
+        }
         return Promise.reject(error);
     }
 );
@@ -170,6 +174,21 @@ export const authApi = {
     login: (email, password) => api.post("/auth/login", { email, password }),
     register: (data) => api.post("/auth/register", data),
     updateProfile: (data) => api.put("/auth/profile", data),
+    changePassword: (data) => api.put("/auth/change-password", data),
+};
+
+// USER MANAGEMENT (ADMIN ONLY) API
+export const userApi = {
+    // Get all users
+    getAllUsers: () => api.get("/users"),
+    // Get users by role
+    getUsersByRole: (role) => api.get(`/users?role=${role}`),
+    // Get user by ID
+    getUserById: (id) => api.get(`/users/${id}`),
+    // Update user
+    updateUser: (id, data) => api.put(`/users/${id}`, data),
+    // Delete user
+    deleteUser: (id) => api.delete(`/users/${id}`),
 };
 
 export const markerApi = {
