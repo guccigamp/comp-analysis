@@ -1,4 +1,5 @@
 import Company from "../models/companyModel.js";
+import Facility from "../models/facilityModel.js";
 
 // Get all companies
 export const getAllCompanies = async (req, res, next) => {
@@ -62,11 +63,12 @@ export const updateCompany = async (req, res, next) => {
 // Delete company
 export const deleteCompany = async (req, res, next) => {
     try {
-        const company = await Company.findByIdAndUpdate(
-            req.params.id,
-            { active: false },
-            { new: true }
-        );
+        const company = await Company.findByIdAndDelete(req.params.id);
+
+        const facilities = await Facility.find({ companyId: company._id });
+        for (const facility of facilities) {
+            await Facility.findByIdAndDelete(facility._id);
+        }
 
         if (!company) {
             return res.status(404).json({ message: "Company not found" });

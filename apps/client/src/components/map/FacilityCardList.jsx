@@ -2,7 +2,7 @@ import { Building, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "../ui/button.jsx"
 import { FacilityCard } from "./FacilityCard.jsx"
 
-export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry, isProximity }) {
+export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry, isProximity, showAlert }) {
 	if (loading) {
 		return (
 			<div className="border rounded-lg p-4 h-[500px] flex items-center justify-center">
@@ -21,7 +21,19 @@ export function FacilityCardList({ facilities, onSelectFacility, selectedFacilit
 					<AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-2" />
 					<p className="text-sm text-red-600 mb-2">{error}</p>
 					{onRetry && (
-						<Button variant="outline" size="sm" onClick={onRetry}>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => {
+								onRetry()
+								showAlert?.({
+									variant: "default",
+									title: "Retrying",
+									message: "Attempting to reload facility data...",
+									duration: 2000,
+								})
+							}}
+						>
 							Try Again
 						</Button>
 					)}

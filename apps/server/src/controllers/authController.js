@@ -48,6 +48,7 @@ export const registerUser = async (req, res) => {
         // Return user data with JWT
         res.status(201).json({
             _id: user._id,
+            role: user.role,
             token: generateToken(user._id),
         });
     } catch (error) {
@@ -76,7 +77,11 @@ export const loginUser = async (req, res) => {
         // Return user data with JWT
         res.json({
             _id: user._id,
+            role: user.role,
             token: generateToken(user._id),
+            name: user.name,
+            email: user.email,
+            employeeId: user.employeeId,
         });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });

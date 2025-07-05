@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
 import { facilityApi } from "../../lib/api.js"
@@ -10,9 +8,10 @@ import { FacilityCardList } from "./FacilityCardList.jsx"
 import { FacilityCard } from "./FacilityCard.jsx"
 import { buildApiFilters } from "../../utils/facility-utils.js"
 import { Button } from "../ui/button.jsx"
-import { MapPin, Settings } from "lucide-react"
+import { Settings } from "lucide-react"
 
-export function ProximityMap({ centerFacility }) {
+
+export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
     const [nearbyFacilities, setNearbyFacilities] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -77,17 +76,23 @@ export function ProximityMap({ centerFacility }) {
 
                 setNearbyFacilities(transformedFacilities)
                 setError(null)
+
             } catch (err) {
                 console.error("Error loading nearby facilities:", err)
                 setError(err.message || "Failed to load nearby facilities")
                 setNearbyFacilities([])
+                showAlert?.({
+                    variant: "destructive",
+                    title: "Proximity Search Error",
+                    message: err.message || "Failed to load nearby facilities"
+                })
             } finally {
                 setLoading(false)
             }
         }
 
         loadNearbyFacilities()
-    }, [centerFacility, filters])
+    }, [centerFacility, filters, showAlert])
 
     // Default center coordinates (US center)
     const defaultCenter = {
@@ -108,7 +113,14 @@ export function ProximityMap({ centerFacility }) {
 
     const commitRadius = () => {
         const num = Number(proximityRadius)
-        if (isNaN(num) || num < 1 || num > 1000) return
+        if (isNaN(num) || num < 1 || num > 1000) {
+            showAlert?.({
+                variant: "destructive",
+                title: "Invalid Radius",
+                message: "Please enter a radius between 1 and 1000",
+            })
+            return
+        }
         updateFilters({
             proximity: {
                 ...filters.proximity,
@@ -129,6 +141,23 @@ export function ProximityMap({ centerFacility }) {
         }
     }
 
+    const handleRetry = () => {
+        showConfirm?.({
+            title: "Retry Proximity Search",
+            message: "This will reload the proximity search results. Continue?",
+            onConfirm: () => {
+                // Trigger a re-fetch by updating the filters
+                updateFilters({
+                    proximity: {
+                        ...filters.proximity,
+                        // Force update by changing a timestamp
+                        lastUpdate: Date.now(),
+                    },
+                })
+            },
+        })
+    }
+
     return (
         <Card className="mt-4">
             <CardHeader className="pb-2">
@@ -141,7 +170,7 @@ export function ProximityMap({ centerFacility }) {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="gap-2"
+                        className="gap-2 bg-transparent"
                         onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                     >
                         <Settings className="h-4 w-4" />
@@ -226,6 +255,8 @@ export function ProximityMap({ centerFacility }) {
                                             onSelectFacility={() => { }}
                                             loading={loading}
                                             error={error}
+                                            onRetry={handleRetry}
+                                            showAlert={showAlert}
                                             isProximity
                                         />
                                     </div>
@@ -252,6 +283,8 @@ export function ProximityMap({ centerFacility }) {
                                 } : null}
                                 proximityRadius={filters.proximity.radius}
                                 proximityUnit={filters.proximity.unit}
+                                showAlert={showAlert}
+                                onRetry={handleRetry}
                             />
                             {!centerFacility && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[2px]">

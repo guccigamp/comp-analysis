@@ -22,6 +22,8 @@ export function InteractiveMap({
     loading = false,
     error = null,
     onRetry,
+    onMapError,
+    showAlert,
     apiKey = import.meta.env.VITE_GOOGLE_MAPS_API,
 }) {
     const [isMapLoading, setIsMapLoading] = useState(true)
@@ -48,13 +50,20 @@ export function InteractiveMap({
     const handleMapLoad = useCallback(() => {
         setIsMapLoading(false)
         setMapError(null)
-    }, [])
+        showAlert?.({
+            variant: "success",
+            title: "Map Loaded",
+            message: "Interactive map is ready to use",
+            duration: 2000,
+        })
+    }, [showAlert])
 
     const handleMapError = useCallback((e) => {
-        console.error("Map error:", e)
-        setMapError("Failed to load map")
+        const errorMessage = "Failed to load Google Maps. Please check your API key and internet connection."
+        setMapError(errorMessage)
         setIsMapLoading(false)
-    }, [])
+        onMapError?.(errorMessage)
+    }, [onMapError])
 
     const handleMarkerClick = useCallback(
         (facility) => {
@@ -81,8 +90,13 @@ export function InteractiveMap({
             setMapZoom(z)
         } catch (err) {
             console.error("Camera change error:", err)
+            showAlert?.({
+                variant: "warning",
+                title: "Map Navigation Issue",
+                message: "There was a minor issue with map navigation, but it should continue working normally.",
+            })
         }
-    }, [])
+    }, [showAlert])
 
     if (loading && !isMapLoading) {
         // Show main loading if data is loading, but map itself has loaded

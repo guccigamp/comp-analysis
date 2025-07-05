@@ -16,7 +16,19 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(() => localStorage.getItem("token"));
     const [user, setUser] = useState(() => {
         const stored = localStorage.getItem("user");
-        return stored ? JSON.parse(stored) : null;
+        if (stored) {
+            const parsedUser = JSON.parse(stored);
+            // Ensure user object has all required fields, otherwise clear it
+            if (parsedUser && parsedUser.id && parsedUser.role && parsedUser.name && parsedUser.email) {
+                return parsedUser;
+            } else {
+                // Clear incomplete user data
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
+                return null;
+            }
+        }
+        return null;
     });
     const [loading, setLoading] = useState(false);
 
@@ -44,7 +56,7 @@ export function AuthProvider({ children }) {
             const { token: jwt } = res.data;
             setToken(jwt);
             // Store minimal user info returned from API
-            setUser({ id: res.data._id, role: res.data.role });
+            setUser({ id: res.data._id, role: res.data.role, name: res.data.name, email: res.data.email, employeeId: res.data.employeeId });
             return res.data;
         } catch (err) {
             // Propagate error to caller

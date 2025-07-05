@@ -4,7 +4,7 @@ import { FacilityCardList } from "./FacilityCardList.jsx"
 import { InteractiveMap } from "./InteractiveMap.jsx"
 import { ProximityMap } from "./ProximityMap.jsx"
 
-export function MainMap() {
+export function MainMap({ showAlert, showConfirm }) {
     const [selectedFacility, setSelectedFacility] = useState(null)
     const { filteredFacilities, filters, loading, error, refreshData, updateFilters } = useSearch()
 
@@ -35,6 +35,35 @@ export function MainMap() {
         [handleMarkerClick],
     )
 
+    const handleMapError = useCallback(
+        (errorMessage) => {
+            showAlert({
+                variant: "destructive",
+                title: "Map Error",
+                message: errorMessage || "An error occurred while loading the map",
+            })
+        },
+        [showAlert],
+    )
+
+    const handleRetry = useCallback(() => {
+        showConfirm({
+            title: "Refresh Data",
+            message: "This will reload all facility data. Continue?",
+            onConfirm: () => {
+                refreshData()
+                showAlert({
+                    variant: "default",
+                    title: "Refreshing Data",
+                    message: "Reloading facility data...",
+                    duration: 2000,
+                })
+            },
+        })
+    }, [refreshData, showAlert, showConfirm])
+
+    if (!filters) return null
+
     return (
         <>
             {/* Main grid: map (left) & facility list (right) */}
@@ -46,9 +75,11 @@ export function MainMap() {
                         setSelectedFacility={setSelectedFacility}
                         loading={loading}
                         error={error}
-                        onRetry={refreshData}
+                        onRetry={handleRetry}
+                        onMapError={handleMapError}
                         onMarkerClick={handleMarkerClick}
                         height="500px"
+                        showAlert={showAlert}
                     />
                 </div>
                 <FacilityCardList
@@ -57,13 +88,13 @@ export function MainMap() {
                     selectedFacilityId={selectedFacility?.id}
                     loading={loading}
                     error={error}
-                    onRetry={refreshData}
-
+                    onRetry={handleRetry}
+                    showAlert={showAlert}
                 />
             </div>
 
             {/* Always show ProximityMap */}
-            <ProximityMap centerFacility={selectedFacility} />
+            <ProximityMap centerFacility={selectedFacility} showAlert={showAlert} showConfirm={showConfirm} />
         </>
     )
 }

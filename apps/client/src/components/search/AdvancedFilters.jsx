@@ -1,11 +1,12 @@
+"use client"
+
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { Button } from "../ui/button.jsx"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
 import { Badge } from "../ui/badge.jsx"
 import { Checkbox } from "../ui/checkbox.jsx"
 import { Input } from "../ui/input.jsx"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.jsx"
-import { X, Settings, ChevronDown, Search, Building, Globe, Loader2, Hash } from "lucide-react"
+import { X, Search, Building, Globe, Loader2, Hash, Filter, RotateCcw, CheckSquare, Square, ChevronDown, ChevronUp } from "lucide-react"
 import { useSearch } from "../../contexts/SearchContext.jsx"
 import { companyApi, facilityApi } from "../../lib/api.js"
 
@@ -96,12 +97,51 @@ const US_REGIONS = {
     },
 }
 
-export function AdvancedFilters() {
-    const { filters, updateFilters, loading } = useSearch()
-    const [isOpen, setIsOpen] = useState(false)
-    const [activeTab, setActiveTab] = useState("regions")
+// Filter chip component
+const FilterChip = ({ type, value, display, onRemove }) => {
+    const getChipConfig = (type) => {
+        switch (type) {
+            case "company":
+                return { icon: Building, color: "bg-green-100 text-green-800 border-green-200" }
+            case "region":
+                return { icon: Globe, color: "bg-indigo-100 text-indigo-800 border-indigo-200" }
+            case "state":
+                return { icon: Globe, color: "bg-purple-100 text-purple-800 border-purple-200" }
+            case "tag":
+                return { icon: Hash, color: "bg-pink-100 text-pink-800 border-pink-200" }
+            case "text":
+                return { icon: Search, color: "bg-blue-100 text-blue-800 border-blue-200" }
+            default:
+                return { icon: Filter, color: "bg-gray-100 text-gray-800 border-gray-200" }
+        }
+    }
+
+    const config = getChipConfig(type)
+    const Icon = config.icon
+
+    return (
+        <Badge variant="secondary" className={`gap-1 pr-1 text-xs font-medium border ${config.color}`}>
+            <Icon className="h-3 w-3" />
+            <span>{display}</span>
+            <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-transparent"
+                onClick={() => onRemove(type, value)}
+            >
+                <X className="h-3 w-3" />
+            </Button>
+        </Badge>
+    )
+}
+
+export default function AdvancedFilters({ showAlert, showConfirm }) {
+    const { filters, updateFilters, loading, totalResults } = useSearch()
     const [companiesData, setCompaniesData] = useState([])
     const [companiesLoading, setCompaniesLoading] = useState(false)
+
+    // Collapse/Expand state
+    const [isExpanded, setIsExpanded] = useState(false)
 
     // Region state
     const [selectedRegions, setSelectedRegions] = useState([])
@@ -117,19 +157,14 @@ export function AdvancedFilters() {
     const [tagSearchTerm, setTagSearchTerm] = useState("")
     const [tagsLoading, setTagsLoading] = useState(false)
 
-    const menuRef = useRef(null)
-
-    // Track if we're updating from context
     const isUpdating = useRef(false)
 
-    // Load companies and tags data when component mounts
     useEffect(() => {
         const loadData = async () => {
             try {
                 setCompaniesLoading(true)
                 setTagsLoading(true)
 
-                // Load companies
                 const companiesResponse = await companyApi.getAllCompanies()
                 const companies = companiesResponse.data
                     .map((company) => {
@@ -146,92 +181,161 @@ export function AdvancedFilters() {
                 setCompaniesData(companies)
                 setCompaniesLoading(false)
 
-                // Load available tags
                 const tagsResponse = await facilityApi.getUniqueTags()
-                const tags = tagsResponse.data.map(tagObj => tagObj.tag) || []
+                const tags = tagsResponse.data.map((tagObj) => tagObj.tag) || []
                 setAvailableTags(tags.sort())
                 setTagsLoading(false)
+
+                showAlert?.({
+                    variant: "success",
+                    title: "Filters Loaded",
+                    message: `Loaded ${companies.length} companies and ${tags.length} tags`,
+                    duration: 3000,
+                })
             } catch (err) {
                 console.error("Error loading data:", err)
                 setCompaniesLoading(false)
                 setTagsLoading(false)
+                showAlert?.({
+                    variant: "destructive",
+                    title: "Loading Error",
+                    message: "Failed to load filter data. Please try refreshing the page.",
+                })
             }
         }
 
         loadData()
-    }, [])
+    }, [showAlert])
 
-    // Close menu when clicking outside
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setIsOpen(false)
-            }
-        }
-
-        document.addEventListener("mousedown", handleClickOutside)
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside)
-        }
-    }, [])
-
-    // Sync local state with context when filters change
     useEffect(() => {
         if (isUpdating.current) return
 
+        setSelectedCompanies(filters.selectedCompanies || [])
+        setSelectedStates(filters.selectedStates || [])
+
         if (filters.advanced) {
             setSelectedRegions(filters.advanced.selectedRegions || [])
-            setSelectedStates(filters.advanced.selectedStates || [])
-            setSelectedCompanies(filters.advanced.selectedCompanies || [])
             setSelectedTags(filters.advanced.selectedTags || [])
         }
-    }, [filters.advanced])
+    }, [filters])
 
-    // Update context when local state changes
     const syncToContext = useCallback(() => {
         isUpdating.current = true
-        const newFilters = {
-            ...filters, // Preserve existing filters
+        updateFilters({
+            selectedCompanies,
+            selectedStates,
+            selectedCities: filters.selectedCities || [],
+            proximity: filters.proximity || { enabled: false, center: null, radius: 50, unit: "miles" },
             advanced: {
                 selectedRegions,
-                selectedStates,
+                selectedStates: [
+                    ...selectedStates,
+                    ...selectedRegions.flatMap((regionKey) => US_REGIONS[regionKey]?.states.map((s) => s.code) || []),
+                ],
                 selectedCompanies,
                 selectedTags,
+                matchAllTags: filters.advanced?.matchAllTags || false,
             },
-        }
-        updateFilters(newFilters)
+        })
         setTimeout(() => {
             isUpdating.current = false
         }, 0)
     }, [selectedRegions, selectedStates, selectedCompanies, selectedTags, updateFilters, filters])
 
-    // Region handlers
-    const handleRegionToggle = useCallback((regionKey) => {
-        const region = US_REGIONS[regionKey]
-        if (!region) return
+    useEffect(() => {
+        const timeoutId = setTimeout(syncToContext, 300)
+        return () => clearTimeout(timeoutId)
+    }, [syncToContext])
 
-        const regionStateCodes = region.states.map((state) => state.code)
+    const selectedFilterChips = useMemo(() => {
+        const chips = []
 
-        setSelectedRegions((prev) => {
-            const newSelectedRegions = prev.includes(regionKey) ? prev.filter((r) => r !== regionKey) : [...prev, regionKey]
 
-            setSelectedStates((prevStates) => {
-                if (prev.includes(regionKey)) {
-                    return prevStates.filter((state) => !regionStateCodes.includes(state))
-                } else {
-                    const newStates = [...prevStates]
-                    regionStateCodes.forEach((stateCode) => {
-                        if (!newStates.includes(stateCode)) {
-                            newStates.push(stateCode)
-                        }
-                    })
-                    return newStates
-                }
+
+        // Companies
+        selectedCompanies.forEach((companyId) => {
+            const company = companiesData.find((c) => c.id === companyId)
+            if (company) {
+                chips.push({
+                    type: "company",
+                    value: companyId,
+                    display: company.name,
+                })
+            }
+        })
+
+        // Regions
+        selectedRegions.forEach((regionKey) => {
+            const region = US_REGIONS[regionKey]
+            if (region) {
+                chips.push({
+                    type: "region",
+                    value: regionKey,
+                    display: region.name,
+                })
+            }
+        })
+
+        // States (not part of selected regions)
+        const regionStates = selectedRegions.flatMap((regionKey) => US_REGIONS[regionKey]?.states.map((s) => s.code) || [])
+        selectedStates.forEach((stateCode) => {
+            if (!regionStates.includes(stateCode)) {
+                chips.push({
+                    type: "state",
+                    value: stateCode,
+                    display: stateCode,
+                })
+            }
+        })
+
+        // Tags
+        selectedTags.forEach((tag) => {
+            chips.push({
+                type: "tag",
+                value: tag,
+                display: tag,
+            })
+        })
+
+        return chips
+    }, [selectedCompanies, selectedRegions, selectedStates, selectedTags, companiesData])
+
+    const handleRegionToggle = useCallback(
+        (regionKey) => {
+            const region = US_REGIONS[regionKey]
+            if (!region) return
+
+            const regionStateCodes = region.states.map((state) => state.code)
+
+            setSelectedRegions((prev) => {
+                const newSelectedRegions = prev.includes(regionKey) ? prev.filter((r) => r !== regionKey) : [...prev, regionKey]
+
+                setSelectedStates((prevStates) => {
+                    if (prev.includes(regionKey)) {
+                        return prevStates.filter((state) => !regionStateCodes.includes(state))
+                    } else {
+                        const newStates = [...prevStates]
+                        regionStateCodes.forEach((stateCode) => {
+                            if (!newStates.includes(stateCode)) {
+                                newStates.push(stateCode)
+                            }
+                        })
+                        return newStates
+                    }
+                })
+
+                return newSelectedRegions
             })
 
-            return newSelectedRegions
-        })
-    }, [])
+            showAlert?.({
+                variant: "default",
+                title: "Region Filter Updated",
+                message: `${region.name} region ${selectedRegions.includes(regionKey) ? "removed" : "added"}`,
+                duration: 2000,
+            })
+        },
+        [showAlert],
+    )
 
     const handleStateToggle = useCallback((stateCode) => {
         setSelectedStates((prev) => {
@@ -273,21 +377,45 @@ export function AdvancedFilters() {
         [selectedStates],
     )
 
-    // Company handlers
-    const handleCompanyToggle = useCallback((companyId) => {
-        setSelectedCompanies((prev) => {
-            return prev.includes(companyId) ? prev.filter((c) => c !== companyId) : [...prev, companyId]
-        })
-    }, [])
+    const handleCompanyToggle = useCallback(
+        (companyId) => {
+            setSelectedCompanies((prev) => {
+                const isRemoving = prev.includes(companyId)
+                const company = companiesData.find((c) => c.id === companyId)
 
-    // Tag handlers
-    const handleTagToggle = useCallback((tag) => {
-        setSelectedTags((prev) => {
-            return prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-        })
-    }, [])
+                if (company) {
+                    showAlert?.({
+                        variant: "default",
+                        title: "Company Filter Updated",
+                        message: `${company.name} ${isRemoving ? "removed" : "added"}`,
+                        duration: 2000,
+                    })
+                }
 
-    // Filter companies based on search term
+                return isRemoving ? prev.filter((c) => c !== companyId) : [...prev, companyId]
+            })
+        },
+        [companiesData, showAlert],
+    )
+
+    const handleTagToggle = useCallback(
+        (tag) => {
+            setSelectedTags((prev) => {
+                const isRemoving = prev.includes(tag)
+
+                showAlert?.({
+                    variant: "default",
+                    title: "Tag Filter Updated",
+                    message: `Tag "${tag}" ${isRemoving ? "removed" : "added"}`,
+                    duration: 2000,
+                })
+
+                return isRemoving ? prev.filter((t) => t !== tag) : [...prev, tag]
+            })
+        },
+        [showAlert],
+    )
+
     const filteredCompanies = useMemo(() => {
         if (!companySearchTerm.trim()) return companiesData
 
@@ -295,7 +423,6 @@ export function AdvancedFilters() {
         return companiesData.filter((company) => company.name.toLowerCase().includes(searchLower))
     }, [companiesData, companySearchTerm])
 
-    // Filter tags based on search term
     const filteredTags = useMemo(() => {
         if (!tagSearchTerm.trim()) return availableTags
 
@@ -303,45 +430,115 @@ export function AdvancedFilters() {
         return availableTags.filter((tag) => tag.toLowerCase().includes(searchLower))
     }, [availableTags, tagSearchTerm])
 
-    // Clear all filters
-    const handleClearAll = useCallback(() => {
-        setSelectedRegions([])
-        setSelectedStates([])
-        setSelectedCompanies([])
-        setSelectedTags([])
-        setCompanySearchTerm("")
-        setTagSearchTerm("")
-    }, [])
-
-    // Select all options in current tab
-    const handleSelectAll = useCallback(() => {
-        switch (activeTab) {
-            case "regions":
-                // Select all regions and their states
-                const allRegions = Object.keys(US_REGIONS)
-                const allStates = Object.values(US_REGIONS).flatMap(region => region.states.map(state => state.code))
-                setSelectedRegions(allRegions)
-                setSelectedStates(allStates)
+    const handleRemoveChip = useCallback((type, value) => {
+        switch (type) {
+            case "company":
+                setSelectedCompanies((prev) => prev.filter((id) => id !== value))
                 break
-            case "companies":
-                // Select all companies
-                const allCompanyIds = companiesData.map(company => company.id)
-                setSelectedCompanies(allCompanyIds)
+            case "region":
+                setSelectedRegions((prev) => prev.filter((key) => key !== value))
                 break
-            case "tags":
-                // Select all tags
-                setSelectedTags([...availableTags])
+            case "state":
+                setSelectedStates((prev) => prev.filter((code) => code !== value))
+                break
+            case "tag":
+                setSelectedTags((prev) => prev.filter((tag) => tag !== value))
                 break
         }
-    }, [activeTab, companiesData, availableTags])
+    }, [])
 
-    // Apply filters
-    const handleApplyFilters = useCallback(() => {
-        syncToContext()
-        setIsOpen(false)
-    }, [syncToContext])
+    const handleClearAll = useCallback(() => {
+        showConfirm?.({
+            title: "Clear All Filters",
+            message: "This will remove all active filters and show all facilities. Continue?",
+            onConfirm: () => {
+                setSelectedRegions([])
+                setSelectedStates([])
+                setSelectedCompanies([])
+                setSelectedTags([])
+                setCompanySearchTerm("")
+                setTagSearchTerm("")
 
-    // Count active filters
+                showAlert?.({
+                    variant: "success",
+                    title: "Filters Cleared",
+                    message: "All filters have been cleared successfully",
+                    duration: 3000,
+                })
+            },
+        })
+    }, [showAlert, showConfirm])
+
+    // Clear/Select All handlers for each section
+    const handleClearRegions = useCallback(() => {
+        setSelectedRegions([])
+        setSelectedStates([])
+        showAlert?.({
+            variant: "default",
+            title: "Regions Cleared",
+            message: "All region filters have been cleared",
+            duration: 2000,
+        })
+    }, [showAlert])
+
+    const handleSelectAllRegions = useCallback(() => {
+        const allRegionKeys = Object.keys(US_REGIONS)
+        const allStateCodes = Object.values(US_REGIONS).flatMap((region) => region.states.map((state) => state.code))
+
+        setSelectedRegions(allRegionKeys)
+        setSelectedStates(allStateCodes)
+
+        showAlert?.({
+            variant: "success",
+            title: "All Regions Selected",
+            message: `Selected all ${allRegionKeys.length} regions`,
+            duration: 2000,
+        })
+    }, [showAlert])
+
+    const handleClearCompanies = useCallback(() => {
+        setSelectedCompanies([])
+        showAlert?.({
+            variant: "default",
+            title: "Companies Cleared",
+            message: "All company filters have been cleared",
+            duration: 2000,
+        })
+    }, [showAlert])
+
+    const handleSelectAllCompanies = useCallback(() => {
+        const allCompanyIds = filteredCompanies.map((company) => company.id)
+        setSelectedCompanies(allCompanyIds)
+
+        showAlert?.({
+            variant: "success",
+            title: "All Companies Selected",
+            message: `Selected ${allCompanyIds.length} companies`,
+            duration: 2000,
+        })
+    }, [filteredCompanies, showAlert])
+
+    const handleClearTags = useCallback(() => {
+        setSelectedTags([])
+        showAlert?.({
+            variant: "default",
+            title: "Tags Cleared",
+            message: "All tag filters have been cleared",
+            duration: 2000,
+        })
+    }, [showAlert])
+
+    const handleSelectAllTags = useCallback(() => {
+        setSelectedTags([...filteredTags])
+
+        showAlert?.({
+            variant: "success",
+            title: "All Tags Selected",
+            message: `Selected ${filteredTags.length} tags`,
+            duration: 2000,
+        })
+    }, [filteredTags, showAlert])
+
     const regionFiltersCount =
         selectedRegions.length +
         selectedStates.filter((state) => {
@@ -354,66 +551,102 @@ export function AdvancedFilters() {
     const companyFiltersCount = selectedCompanies.length
     const tagFiltersCount = selectedTags.length
 
-    const totalActiveFilters = regionFiltersCount + companyFiltersCount + tagFiltersCount
-
     return (
-        <div className="relative" ref={menuRef}>
-            <Button
-                variant={totalActiveFilters > 0 ? "default" : "outline"}
-                size="sm"
-                className="gap-2"
-                onClick={() => setIsOpen(!isOpen)}
-                disabled={loading}
-            >
-                <Settings className="h-4 w-4" />
-                Advanced Filters
-                {totalActiveFilters > 0 && (
-                    <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
-                        {totalActiveFilters}
-                    </Badge>
-                )}
-                <ChevronDown className="h-3 w-3" />
-            </Button>
-
-            {isOpen && (
-                <Card className="absolute top-full mt-2 right-0 w-[480px] shadow-lg z-50 max-h-[600px] overflow-hidden">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 text-lg">
-                                <Settings className="h-5 w-5" />
-                                Advanced Filters
-                            </CardTitle>
-                            <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                                <X className="h-4 w-4" />
+        <Card className="w-full">
+            <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Filter className="h-5 w-5" />
+                            Filters
+                            {selectedFilterChips.length > 0 && (
+                                <Badge variant="secondary" className="ml-1">
+                                    {selectedFilterChips.length}
+                                </Badge>
+                            )}
+                        </CardTitle>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="h-8 w-8 p-0"
+                        >
+                            {isExpanded ? (
+                                <ChevronUp className="h-4 w-4" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                            {loading ? "Loading..." : `${totalResults} facilities found`}
+                        </span>
+                        {selectedFilterChips.length > 0 && (
+                            <Button variant="outline" size="sm" onClick={handleClearAll}>
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Clear All
                             </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Selected filters display */}
+                {selectedFilterChips.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t">
+                        {selectedFilterChips.map((chip, index) => (
+                            <FilterChip
+                                key={`${chip.type}-${chip.value}-${index}`}
+                                type={chip.type}
+                                value={chip.value}
+                                display={chip.display}
+                                onRemove={handleRemoveChip}
+                            />
+                        ))}
+                    </div>
+                )}
+            </CardHeader>
+
+            {isExpanded && (
+                <CardContent className="space-y-4 animate-in slide-in-from-top-2 duration-200">
+                    {loading || companiesLoading || tagsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            <span className="ml-2">Loading data...</span>
                         </div>
-                    </CardHeader>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Regions Column */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Globe className="h-4 w-4 text-muted-foreground" />
+                                        <h3 className="font-medium">Regions</h3>
+                                        {regionFiltersCount > 0 && (
+                                            <Badge variant="secondary" className="text-xs">
+                                                {regionFiltersCount}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button variant="ghost" size="sm" onClick={handleSelectAllRegions} className="h-7 px-2 text-xs">
+                                            <CheckSquare className="h-3 w-3 mr-1" />
+                                            All
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleClearRegions}
+                                            className="h-7 px-2 text-xs"
+                                            disabled={regionFiltersCount === 0}
+                                        >
+                                            <Square className="h-3 w-3 mr-1" />
+                                            Clear
+                                        </Button>
+                                    </div>
+                                </div>
 
-                    <CardContent className="space-y-4">
-                        {loading || companiesLoading || tagsLoading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                <span className="ml-2">Loading data...</span>
-                            </div>
-                        ) : (
-                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                                <TabsList className="grid w-full grid-cols-3">
-                                    <TabsTrigger value="regions" className="flex items-center gap-2">
-                                        <Globe className="h-4 w-4" />
-                                        Regions ({regionFiltersCount})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="companies" className="flex items-center gap-2">
-                                        <Building className="h-4 w-4" />
-                                        Companies ({companyFiltersCount})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="tags" className="flex items-center gap-2">
-                                        <Hash className="h-4 w-4" />
-                                        Tags ({tagFiltersCount})
-                                    </TabsTrigger>
-                                </TabsList>
-
-                                {/* Regions Tab */}
-                                <TabsContent value="regions" className="space-y-4 max-h-64 overflow-y-auto">
+                                <div className="max-h-80 overflow-y-auto space-y-2 pr-2">
                                     {Object.entries(US_REGIONS).map(([regionKey, region]) => {
                                         const isRegionSelected = selectedRegions.includes(regionKey)
                                         const isPartiallySelected = isRegionPartiallySelected(regionKey)
@@ -433,14 +666,14 @@ export function AdvancedFilters() {
                                                     />
                                                     <label
                                                         htmlFor={`region-${regionKey}`}
-                                                        className="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                        className="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                                                     >
                                                         {region.name}
                                                     </label>
-                                                    <span className="text-xs text-muted-foreground">({region.states.length} states)</span>
+                                                    <span className="text-xs text-muted-foreground">({region.states.length})</span>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-1 ml-6">
+                                                <div className="grid grid-cols-1 gap-1 ml-6">
                                                     {region.states.map((state) => (
                                                         <div key={state.code} className="flex items-center space-x-2">
                                                             <Checkbox
@@ -460,136 +693,172 @@ export function AdvancedFilters() {
                                             </div>
                                         )
                                     })}
-                                </TabsContent>
+                                </div>
+                            </div>
 
-                                {/* Companies Tab */}
-                                <TabsContent value="companies" className="space-y-4">
-                                    {/* Search Input */}
-                                    <div className="relative">
-                                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search companies..."
-                                            value={companySearchTerm}
-                                            onChange={(e) => setCompanySearchTerm(e.target.value)}
-                                            className="pl-8"
-                                        />
+                            {/* Companies Column */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Building className="h-4 w-4 text-muted-foreground" />
+                                        <h3 className="font-medium">Companies</h3>
+                                        {companyFiltersCount > 0 && (
+                                            <Badge variant="secondary" className="text-xs">
+                                                {companyFiltersCount}
+                                            </Badge>
+                                        )}
                                     </div>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleSelectAllCompanies}
+                                            className="h-7 px-2 text-xs"
+                                            disabled={filteredCompanies.length === 0}
+                                        >
+                                            <CheckSquare className="h-3 w-3 mr-1" />
+                                            All
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleClearCompanies}
+                                            className="h-7 px-2 text-xs"
+                                            disabled={companyFiltersCount === 0}
+                                        >
+                                            <Square className="h-3 w-3 mr-1" />
+                                            Clear
+                                        </Button>
+                                    </div>
+                                </div>
 
-                                    <div className="max-h-64 overflow-y-auto space-y-1">
-                                        {filteredCompanies.map((company) => (
-                                            <div key={company.id} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
+                                <div className="relative">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search companies..."
+                                        value={companySearchTerm}
+                                        onChange={(e) => setCompanySearchTerm(e.target.value)}
+                                        className="pl-8"
+                                    />
+                                </div>
+
+                                <div className="max-h-80 overflow-y-auto space-y-1 pr-2">
+                                    {filteredCompanies.map((company) => (
+                                        <div key={company.id} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
+                                            <Checkbox
+                                                id={`company-${company.id}`}
+                                                checked={selectedCompanies.includes(company.id)}
+                                                onCheckedChange={() => handleCompanyToggle(company.id)}
+                                            />
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: company.color }} />
+                                            <label
+                                                htmlFor={`company-${company.id}`}
+                                                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                                            >
+                                                {company.name}
+                                            </label>
+                                            <span className="text-xs text-muted-foreground">{company.facilityCount}</span>
+                                        </div>
+                                    ))}
+
+                                    {companySearchTerm.trim() && filteredCompanies.length === 0 && (
+                                        <div className="text-center py-4 text-muted-foreground">
+                                            <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                            <p className="text-sm">No companies found matching "{companySearchTerm}"</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Tags Column */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Hash className="h-4 w-4 text-muted-foreground" />
+                                        <h3 className="font-medium">Tags</h3>
+                                        {tagFiltersCount > 0 && (
+                                            <Badge variant="secondary" className="text-xs">
+                                                {tagFiltersCount}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleSelectAllTags}
+                                            className="h-7 px-2 text-xs"
+                                            disabled={filteredTags.length === 0}
+                                        >
+                                            <CheckSquare className="h-3 w-3 mr-1" />
+                                            All
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleClearTags}
+                                            className="h-7 px-2 text-xs"
+                                            disabled={tagFiltersCount === 0}
+                                        >
+                                            <Square className="h-3 w-3 mr-1" />
+                                            Clear
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search tags..."
+                                        value={tagSearchTerm}
+                                        onChange={(e) => setTagSearchTerm(e.target.value)}
+                                        className="pl-8"
+                                    />
+                                </div>
+
+                                <div className="max-h-80 overflow-y-auto space-y-1 pr-2">
+                                    {tagsLoading ? (
+                                        <div className="flex items-center justify-center py-4">
+                                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                            <span className="ml-2 text-sm">Loading tags...</span>
+                                        </div>
+                                    ) : filteredTags.length > 0 ? (
+                                        filteredTags.map((tag) => (
+                                            <div key={tag} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
                                                 <Checkbox
-                                                    id={`company-${company.id}`}
-                                                    checked={selectedCompanies.includes(company.id)}
-                                                    onCheckedChange={() => handleCompanyToggle(company.id)}
+                                                    id={`tag-${tag}`}
+                                                    checked={selectedTags.includes(tag)}
+                                                    onCheckedChange={() => handleTagToggle(tag)}
                                                 />
-                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: company.color }} />
                                                 <label
-                                                    htmlFor={`company-${company.id}`}
+                                                    htmlFor={`tag-${tag}`}
                                                     className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                                                 >
-                                                    {company.name}
+                                                    {tag.replace(/\b\w/g, (match) => match.toUpperCase())}
                                                 </label>
-                                                <span className="text-xs text-muted-foreground">{company.facilityCount} facilities</span>
                                             </div>
-                                        ))}
-
-                                        {companySearchTerm.trim() && filteredCompanies.length === 0 && (
-                                            <div className="text-center py-4 text-muted-foreground">
-                                                <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                                <p>No companies found matching "{companySearchTerm}"</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </TabsContent>
-
-                                {/* Tags Tab */}
-                                <TabsContent value="tags" className="space-y-4">
-                                    {/* Search Input */}
-                                    <div className="relative">
-                                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search tags..."
-                                            value={tagSearchTerm}
-                                            onChange={(e) => setTagSearchTerm(e.target.value)}
-                                            className="pl-8"
-                                        />
-                                    </div>
-
-                                    <div className="max-h-64 overflow-y-auto space-y-1">
-                                        {tagsLoading ? (
-                                            <div className="flex items-center justify-center py-4">
-                                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                                <span className="ml-2 text-sm">Loading tags...</span>
-                                            </div>
-                                        ) : filteredTags.length > 0 ? (
-                                            filteredTags.map((tag) => (
-                                                <div key={tag} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
-                                                    <Checkbox
-                                                        id={`tag-${tag}`}
-                                                        checked={selectedTags.includes(tag)}
-                                                        onCheckedChange={() => handleTagToggle(tag)}
-                                                    />
-                                                    <label
-                                                        htmlFor={`tag-${tag}`}
-                                                        className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                                                    >
-                                                        {tag.replace(/\b\w/g, (match) => match.toUpperCase())}
-                                                    </label>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center py-4 text-muted-foreground">
-                                                {tagSearchTerm.trim() ? (
-                                                    <>
-                                                        <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                                        <p>No tags found matching "{tagSearchTerm}"</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                                        <p>No tags available</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex justify-between pt-2 border-t">
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleClearAll}
-                                    disabled={loading || companiesLoading || tagsLoading}
-                                >
-                                    Clear All
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleSelectAll}
-                                    disabled={loading || companiesLoading || tagsLoading}
-                                >
-                                    Select All
-                                </Button>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button size="sm" onClick={handleApplyFilters} disabled={loading || companiesLoading || tagsLoading}>
-                                    Apply
-                                </Button>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-4 text-muted-foreground">
+                                            {tagSearchTerm.trim() ? (
+                                                <>
+                                                    <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">No tags found matching "{tagSearchTerm}"</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">No tags available</p>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    )}
+                </CardContent>
             )}
-        </div>
+        </Card>
     )
 }

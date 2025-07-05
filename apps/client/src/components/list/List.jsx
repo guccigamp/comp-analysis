@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useMemo, useRef } from "react"
 import { Table } from "./Table.jsx"
 import { Button } from "../ui/button.jsx"
@@ -9,14 +7,15 @@ import { exportFacilitiesToCSV } from "../../utils/export-utils.js"
 import { useToast } from "../../hooks/use-toast.js"
 import { uploadApi, templateApi } from "../../lib/api.js"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu.jsx"
+import { AlertProvider } from "../ui/alert-provider.jsx"
+import { useAlert } from "../../hooks/use-alert.jsx"
 
 export function List() {
-
-
     const [sortField, setSortField] = useState("companyName")
     const [sortDirection, setSortDirection] = useState("asc")
     const [isExporting, setIsExporting] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
+    const { alertState, showAlert } = useAlert()
 
     const fileInputRef = useRef(null)
 
@@ -50,10 +49,10 @@ export function List() {
     // Handle export
     const handleExport = async () => {
         if (sortedFacilities.length === 0) {
-            toast({
+            showAlert({
+                variant: "warning",
                 title: "No data to export",
-                description: "There are no facilities matching your current filters.",
-                variant: "destructive",
+                message: "There are no facilities matching your current filters.",
             })
             return
         }
@@ -73,10 +72,10 @@ export function List() {
             })
         } catch (error) {
             console.error("Export error:", error)
-            toast({
-                title: "Export failed",
-                description: "An error occurred while exporting the data. Please try again.",
+            showAlert({
                 variant: "destructive",
+                title: "Export failed",
+                message: "An error occurred while exporting the data. Please try again.",
             })
         } finally {
             setIsExporting(false)
@@ -198,6 +197,8 @@ export function List() {
 
     return (
         <div className="space-y-4">
+            {/* Alert Component */}
+            <AlertProvider alertState={alertState} />
             <div className="flex justify-between items-center">
                 <div className="text-sm text-muted-foreground">Showing {sortedFacilities.length} facilities</div>
                 <div className="flex gap-2">
@@ -209,19 +210,8 @@ export function List() {
 
                     {/* Upload CSV */}
                     <div>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                        />
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                        >
+                        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                             <Upload className="mr-2 h-4 w-4" />
                             {isUploading ? "Uploading..." : "Upload CSV"}
                         </Button>
@@ -230,11 +220,7 @@ export function List() {
                     {/* Export & Templates Dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={sortedFacilities.length === 0 || loading}
-                            >
+                            <Button variant="outline" size="sm" disabled={sortedFacilities.length === 0 || loading}>
                                 {isExporting ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -250,19 +236,18 @@ export function List() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={handleExport}>Export Results</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownloadTemplate("address")}>Download Address Template</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownloadTemplate("coordinates")}>Download Coordinates Template</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadTemplate("address")}>
+                                Download Address Template
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadTemplate("coordinates")}>
+                                Download Coordinates Template
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </div>
 
-            <Table
-                facilities={sortedFacilities}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-            />
+            <Table facilities={sortedFacilities} sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
         </div>
     )
 }
