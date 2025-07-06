@@ -4,7 +4,7 @@ import { MarkerPin } from "./MarkerPin.jsx"
 import { ProximityCircle } from "./ProximityCircle.jsx"
 import { MapLoadingState } from "./MapLoadingState.jsx"
 import { MapErrorState } from "./MapErrorState.jsx"
-
+import { MapLegend } from "./MapLegend.jsx"
 
 export function InteractiveMap({
     facilities = [],
@@ -160,6 +160,7 @@ export function InteractiveMap({
                     )}
                 </GoogleMapComponent>
             </APIProvider>
+            <MapLegend facilities={facilities} />
         </div>
     )
 }
