@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Eye, BarChart3, Database, Users, ChevronDown, LogOut, Settings } from "lucide-react"
 import {
@@ -16,6 +17,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu.jsx"
 import { Avatar, AvatarFallback } from "./ui/avatar.jsx"
 import { useAuth } from "../contexts/AuthContext.jsx"
+import { PasswordDialog } from "./PasswordDialog.jsx"
 
 const navigationItems = [
     {
@@ -52,8 +54,21 @@ export function AppSidebar() {
     const location = useLocation()
     const navigate = useNavigate()
     const { user, logout, isAdmin } = useAuth()
+
+    // Change password dialog state
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+
     const handleNavigation = (url) => {
         navigate(url)
+    }
+
+    // Dialog to change password
+    const handleChangePassword = () => {
+        setIsChangePasswordOpen(true)
+    }
+
+    const handlePasswordChanged = () => {
+        handleLogout()
     }
 
     const handleLogout = () => {
@@ -131,9 +146,9 @@ export function AppSidebar() {
                                 align="end"
                                 sideOffset={4}
                             >
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleChangePassword}>
                                     <Settings className="mr-2 h-4 w-4" />
-                                    <span>Account Settings</span>
+                                    <span>Change Password</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleLogout}>
                                     <LogOut className="mr-2 h-4 w-4" />
@@ -145,6 +160,13 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarFooter>
             <SidebarRail />
+
+            {/* Change Password Dialog */}
+            <PasswordDialog
+                isOpen={isChangePasswordOpen}
+                onClose={() => setIsChangePasswordOpen(false)}
+                onPasswordChanged={handlePasswordChanged}
+            />
         </Sidebar>
     )
 }
