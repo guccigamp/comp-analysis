@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx"
 import { Badge } from "../ui/badge.jsx"
 import { Checkbox } from "../ui/checkbox.jsx"
 import { Input } from "../ui/input.jsx"
-import { X, Search, Building, Globe, Loader2, Hash, Filter, RotateCcw, CheckSquare, Square, ChevronDown, ChevronUp } from "lucide-react"
+import { X, Search, Building, Globe, Loader2, Hash, Filter, RotateCcw, CheckSquare, Square, ChevronDown, ChevronUp, Save } from "lucide-react"
 import { useSearch } from "../../contexts/SearchContext.jsx"
 import { companyApi, facilityApi } from "../../lib/api.js"
 
@@ -242,10 +242,17 @@ export default function AdvancedFilters({ showAlert, showConfirm }) {
         }, 0)
     }, [selectedRegions, selectedStates, selectedCompanies, selectedTags, updateFilters, filters])
 
-    useEffect(() => {
-        const timeoutId = setTimeout(syncToContext, 300)
-        return () => clearTimeout(timeoutId)
-    }, [syncToContext])
+    // Removed automatic sync; filters will sync only when user presses Save
+
+    const handleSaveFilters = useCallback(() => {
+        syncToContext()
+        showAlert?.({
+            variant: "success",
+            title: "Filters Saved",
+            message: "Your filters have been applied.",
+            duration: 2000,
+        })
+    }, [syncToContext, showAlert])
 
     const selectedFilterChips = useMemo(() => {
         const chips = []
@@ -582,6 +589,10 @@ export default function AdvancedFilters({ showAlert, showConfirm }) {
                         <span className="text-sm text-muted-foreground">
                             {loading ? "Loading..." : `${totalResults} facilities found`}
                         </span>
+                        <Button variant="default" size="sm" onClick={handleSaveFilters}>
+                            <Save className="mr-2 h-4 w-4" />
+                            Save
+                        </Button>
                         {selectedFilterChips.length > 0 && (
                             <Button variant="outline" size="sm" onClick={handleClearAll}>
                                 <RotateCcw className="mr-2 h-4 w-4" />
