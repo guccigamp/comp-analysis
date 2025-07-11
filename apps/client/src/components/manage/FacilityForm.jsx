@@ -21,6 +21,8 @@ export default function FacilityForm({ facility, companies, onSave, onCancel, is
         e.preventDefault()
         const data = {
             ...formData,
+            // Include facility ID if editing to allow parent to differentiate between create and update
+            _id: facility?._id,
             latitude: formData.latitude ? Number.parseFloat(formData.latitude) : undefined,
             longitude: formData.longitude ? Number.parseFloat(formData.longitude) : undefined,
             tags: formData.tags

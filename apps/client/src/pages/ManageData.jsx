@@ -147,8 +147,12 @@ export default function ManageData() {
     const handleSaveFacility = async (data) => {
         try {
             setFormLoading(true)
-            if (editingFacility) {
-                await facilityApi.updateFacility(editingFacility._id, data)
+            const { _id, ...payload } = data
+
+            // If an ID is provided in the submitted data or we have an editingFacility in state, treat as update
+            if (_id || editingFacility) {
+                const idToUpdate = _id || editingFacility._id
+                await facilityApi.updateFacility(idToUpdate, payload)
                 toast({ title: "Facility updated successfully" })
                 showAlert({
                     variant: "success",
@@ -156,7 +160,7 @@ export default function ManageData() {
                     message: "Facility updated successfully",
                 })
             } else {
-                await facilityApi.createFacility(data)
+                await facilityApi.createFacility(payload)
                 toast({ title: "Facility created successfully" })
                 showAlert({
                     variant: "success",
