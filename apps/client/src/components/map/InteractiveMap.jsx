@@ -13,8 +13,7 @@ export function InteractiveMap({
     height = "500px",
     className = "",
     onMarkerClick,
-    showProximityCircle = false,
-    proximityCenter = null,
+    proximityCenters = [],
     proximityRadius = 50,
     proximityUnit = "miles",
     selectedFacility = null,
@@ -155,9 +154,14 @@ export function InteractiveMap({
                         onMarkerClick={handleMarkerClick}
                         onInfoWindowClose={handleInfoWindowClose}
                     />
-                    {showProximityCircle && proximityCenter && (
-                        <ProximityCircle center={proximityCenter} radius={proximityRadius} unit={proximityUnit} />
-                    )}
+
+                    {/* Render one proximity circle per provided center */}
+                    {Array.isArray(proximityCenters) && proximityCenters.map((c, idx) => (
+                        c && <ProximityCircle key={idx}
+                            center={{ lat: c.latitude ?? c.lat, lng: c.longitude ?? c.lng }}
+                            radius={proximityRadius}
+                            unit={proximityUnit} />
+                    ))}
                 </GoogleMapComponent>
             </APIProvider>
             <MapLegend facilities={facilities} />

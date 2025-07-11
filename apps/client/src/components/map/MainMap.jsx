@@ -5,7 +5,10 @@ import { InteractiveMap } from "./InteractiveMap.jsx"
 import { ProximityMap } from "./ProximityMap.jsx"
 
 export function MainMap({ showAlert, showConfirm }) {
-    const [selectedFacility, setSelectedFacility] = useState(null)
+    // Facility displayed in InfoWindow
+    const [focusedFacility, setFocusedFacility] = useState(null)
+    // Facilities chosen as proximity centers
+    const [selectedCenters, setSelectedCenters] = useState([])
     const { filteredFacilities, filters, loading, error, refreshData, updateFilters } = useSearch()
 
     if (!filters) return null
@@ -16,24 +19,30 @@ export function MainMap({ showAlert, showConfirm }) {
                 console.error("Invalid facility data for marker click:", facility)
                 return
             }
-            setSelectedFacility(facility)
-            updateFilters({
-                proximity: {
-                    ...filters.proximity,
-                    center: {
-                        latitude: facility.latitude,
-                        longitude: facility.longitude,
-                    },
-                },
+
+            // Toggle facility in selectedCenters
+            setSelectedCenters((prev) => {
+                const exists = prev.some((f) => f.id === facility.id)
+                if (exists) {
+                    return prev // do not remove; keep selection unchanged
+                }
+                return [...prev, facility]
             })
+
+            // Keep single focused facility for InfoWindow
+            setFocusedFacility(facility)
         },
-        [updateFilters, filters?.proximity],
+        [],
     )
 
     const handleSelectFacility = useCallback(
         (facility) => handleMarkerClick(facility),
         [handleMarkerClick],
     )
+
+    const handleDeselectCenter = useCallback((id) => {
+        setSelectedCenters((prev) => prev.filter((f) => f.id !== id))
+    }, [])
 
     const handleMapError = useCallback(
         (errorMessage) => {
@@ -71,8 +80,8 @@ export function MainMap({ showAlert, showConfirm }) {
                 <div className="">
                     <InteractiveMap
                         facilities={filteredFacilities || []}
-                        selectedFacility={selectedFacility}
-                        setSelectedFacility={setSelectedFacility}
+                        selectedFacility={focusedFacility}
+                        setSelectedFacility={setFocusedFacility}
                         loading={loading}
                         error={error}
                         onRetry={handleRetry}
@@ -86,7 +95,7 @@ export function MainMap({ showAlert, showConfirm }) {
                     <FacilityCardList
                         facilities={filteredFacilities || []}
                         onSelectFacility={handleSelectFacility}
-                        selectedFacilityId={selectedFacility?.id}
+                        selectedFacilityId={focusedFacility?.id}
                         loading={loading}
                         error={error}
                         onRetry={handleRetry}
@@ -96,7 +105,7 @@ export function MainMap({ showAlert, showConfirm }) {
             </div>
 
             {/* Always show ProximityMap */}
-            <ProximityMap centerFacility={selectedFacility} showAlert={showAlert} showConfirm={showConfirm} />
+            <ProximityMap centers={selectedCenters} onDeselectCenter={handleDeselectCenter} showAlert={showAlert} showConfirm={showConfirm} />
         </>
     )
 }

@@ -11,7 +11,7 @@ import { Button } from "../ui/button.jsx"
 import { Settings } from "lucide-react"
 
 
-export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
+export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectCenter = () => { } }) {
     const [nearbyFacilities, setNearbyFacilities] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -42,7 +42,7 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
     // Load nearby facilities when center facility changes
     useEffect(() => {
         const loadNearbyFacilities = async () => {
-            if (!centerFacility || !filters.proximity?.enabled) {
+            if (!centers || centers.length === 0 || !filters.proximity?.enabled) {
                 setNearbyFacilities([])
                 setLoading(false)
                 return
@@ -53,28 +53,43 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
                 setError(null)
 
                 // Validate center facility coordinates
-                if (!centerFacility.latitude || !centerFacility.longitude) {
+                if (!centers.every(center => center.latitude && center.longitude)) {
                     throw new Error("Invalid facility coordinates")
                 }
 
-                // Create filters that include both proximity and other filters
-                const apiFilters = {
-                    ...buildApiFilters(filters),
-                    latitude: centerFacility.latitude,
-                    longitude: centerFacility.longitude,
-                    radius: filters.proximity.radius,
-                    unit: filters.proximity.unit
+                let aggregated = []
+
+                for (const center of centers) {
+                    // Build the non-proximity filter set
+                    const baseFilters = buildApiFilters({
+                        ...filters,
+                        proximity: {
+                            ...filters.proximity,
+                            enabled: false,
+                        },
+                    })
+
+                    const apiFilters = {
+                        ...baseFilters,
+                        latitude: center.latitude,
+                        longitude: center.longitude,
+                        radius: filters.proximity.radius,
+                        unit: filters.proximity.unit,
+                    }
+
+                    // eslint-disable-next-line no-await-in-loop
+                    const response = await facilityApi.getFilteredFacilities(apiFilters)
+
+                    const facilitiesRaw = Array.isArray(response?.data) ? response.data : []
+                    const transformed = transformFacilityData(facilitiesRaw).filter((f) => f.id !== center.id)
+
+                    aggregated = [...aggregated, ...transformed]
                 }
 
-                // Call backend with combined filters
-                const response = await facilityApi.getFilteredFacilities(apiFilters)
+                // Deduplicate by facility id
+                const deduped = Array.from(new Map(aggregated.map((f) => [f.id, f])).values())
 
-                const facilitiesRaw = Array.isArray(response?.data) ? response.data : []
-                const transformedFacilities = transformFacilityData(facilitiesRaw).filter(
-                    (facility) => facility.id !== centerFacility.id,
-                )
-
-                setNearbyFacilities(transformedFacilities)
+                setNearbyFacilities(deduped)
                 setError(null)
 
             } catch (err) {
@@ -92,7 +107,7 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
         }
 
         loadNearbyFacilities()
-    }, [centerFacility, filters, showAlert])
+    }, [centers, filters, showAlert])
 
     // Default center coordinates (US center)
     const defaultCenter = {
@@ -163,7 +178,7 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">
-                        {centerFacility
+                        {centers && centers.length > 0
                             ? `Facilities within ${filters.proximity.radius} ${filters.proximity.unit} of selected location`
                             : "Proximity Search"}
                     </CardTitle>
@@ -233,33 +248,32 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
                         </div>
                     )}
 
-                    {centerFacility && <FacilityCard facility={centerFacility} />}
+                    {centers && centers.length > 0 && centers.map((center) => (
+                        <FacilityCard key={center.id} facility={center} onDeselect={() => onDeselectCenter(center.id)} />
+                    ))}
 
                     {/* Layout: map (top) & facility list (bottom) */}
                     <div id="proximitymap" className="space-y-4">
                         {/* Map */}
                         <div className="relative">
                             <InteractiveMap
-                                facilities={centerFacility ? [centerFacility, ...nearbyFacilities] : []}
-                                center={centerFacility ? {
-                                    lat: centerFacility.latitude,
-                                    lng: centerFacility.longitude,
+                                facilities={nearbyFacilities}
+                                center={centers.length > 0 ? {
+                                    lat: centers[0].latitude,
+                                    lng: centers[0].longitude,
                                 } : defaultCenter}
-                                zoom={centerFacility ? 5 : 4}
+                                zoom={centers.length > 0 ? 5 : 4}
                                 height="500px"
                                 loading={loading}
                                 error={error}
-                                showProximityCircle={!!centerFacility}
-                                proximityCenter={centerFacility ? {
-                                    lat: centerFacility.latitude,
-                                    lng: centerFacility.longitude,
-                                } : null}
+                                showProximityCircle={!!centers.length}
+                                proximityCenters={centers}
                                 proximityRadius={filters.proximity.radius}
                                 proximityUnit={filters.proximity.unit}
                                 showAlert={showAlert}
                                 onRetry={handleRetry}
                             />
-                            {!centerFacility && (
+                            {!centers.length && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[2px]">
                                     <div className="bg-white/90 p-6 rounded-lg shadow-lg text-center max-w-md">
                                         <h3 className="text-lg font-semibold mb-2">Select a Facility</h3>
@@ -273,7 +287,7 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
 
                         {/* Facilities list */}
                         <div>
-                            {!centerFacility ? (
+                            {centers.length === 0 ? (
                                 <div className="text-center py-4 text-muted-foreground">
                                     Select a facility to view nearby locations
                                 </div>
