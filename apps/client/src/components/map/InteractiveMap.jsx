@@ -16,6 +16,7 @@ export function InteractiveMap({
     proximityCenters = [],
     proximityRadius = 50,
     proximityUnit = "miles",
+    centerSettings = {},
     selectedFacility = null,
     setSelectedFacility = null,
     loading = false,
@@ -156,12 +157,22 @@ export function InteractiveMap({
                     />
 
                     {/* Render one proximity circle per provided center */}
-                    {Array.isArray(proximityCenters) && proximityCenters.map((c, idx) => (
-                        c && <ProximityCircle key={idx}
-                            center={{ lat: c.latitude ?? c.lat, lng: c.longitude ?? c.lng }}
-                            radius={proximityRadius}
-                            unit={proximityUnit} />
-                    ))}
+                    {Array.isArray(proximityCenters) && proximityCenters.map((c, idx) => {
+                        if (!c) return null
+                        const settings = centerSettings?.[c.id] || {}
+                        const radius = settings.radius ?? proximityRadius
+                        const unit = settings.unit ?? proximityUnit
+                        const color = settings.color ?? "#4f46e5"
+                        return (
+                            <ProximityCircle
+                                key={idx}
+                                center={{ lat: c.latitude ?? c.lat, lng: c.longitude ?? c.lng }}
+                                radius={radius}
+                                unit={unit}
+                                color={color}
+                            />
+                        )
+                    })}
                 </GoogleMapComponent>
             </APIProvider>
             <MapLegend facilities={facilities} />

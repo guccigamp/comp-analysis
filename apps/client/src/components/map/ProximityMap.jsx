@@ -7,9 +7,6 @@ import { InteractiveMap } from "./InteractiveMap.jsx"
 import { FacilityCardList } from "./FacilityCardList.jsx"
 import { FacilityCard } from "./FacilityCard.jsx"
 import { buildApiFilters } from "../../utils/facility-utils.js"
-import { Button } from "../ui/button.jsx"
-import { Settings } from "lucide-react"
-
 
 export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectCenter = () => { } }) {
     const [nearbyFacilities, setNearbyFacilities] = useState([])
@@ -17,9 +14,8 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
     const [nearbyFacilitiesByCenter, setNearbyFacilitiesByCenter] = useState({})
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-    const [proximityRadius, setProximityRadius] = useState("50")
-    const [proximityUnit, setProximityUnit] = useState("miles")
+    // Map of centerId -> settings {radius, unit, circleColor, markerColor}
+    const [centerSettings, setCenterSettings] = useState({})
     const { filters, updateFilters } = useSearch()
 
     // Enable proximity by default when component mounts
@@ -35,11 +31,29 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
         }
     }, [])
 
-    // Sync local state with context when filters change
+    // Ensure each selected center has default settings when centers change
     useEffect(() => {
-        setProximityRadius(String(filters.proximity.radius))
-        setProximityUnit(filters.proximity.unit)
-    }, [filters.proximity.radius, filters.proximity.unit])
+        if (!centers || centers.length === 0) return
+        setCenterSettings((prev) => {
+            const updated = { ...prev }
+            centers.forEach((c) => {
+                if (!updated[c.id]) {
+                    updated[c.id] = {
+                        radius: filters.proximity?.radius ?? 50,
+                        unit: filters.proximity?.unit ?? "miles",
+                        color: "#4f46e5",
+                    }
+                }
+            })
+            // Remove settings for deselected centers
+            Object.keys(updated).forEach((id) => {
+                if (!centers.find((c) => String(c.id) === String(id))) {
+                    delete updated[id]
+                }
+            })
+            return updated
+        })
+    }, [centers, filters.proximity])
 
     // Load nearby facilities when center facility changes
     useEffect(() => {
@@ -59,38 +73,42 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                     throw new Error("Invalid facility coordinates")
                 }
 
-                let aggregated = []
-                const newFacilitiesByCenter = {}
+                const baseFilters = buildApiFilters({
+                    ...filters,
+                    proximity: {
+                        ...filters.proximity,
+                        enabled: false,
+                    },
+                })
 
-                for (const center of centers) {
-                    // Build the non-proximity filter set
-                    const baseFilters = buildApiFilters({
-                        ...filters,
-                        proximity: {
-                            ...filters.proximity,
-                            enabled: false,
-                        },
+                // Fetch facilities for all centers in parallel
+                const results = await Promise.all(
+                    centers.map(async (center) => {
+                        const setting = centerSettings[center.id] || {
+                            radius: filters.proximity.radius,
+                            unit: filters.proximity.unit,
+                        }
+
+                        const apiFilters = {
+                            ...baseFilters,
+                            latitude: center.latitude,
+                            longitude: center.longitude,
+                            radius: setting.radius,
+                            unit: setting.unit,
+                        }
+
+                        const response = await facilityApi.getFilteredFacilities(apiFilters)
+                        const facilitiesRaw = Array.isArray(response?.data) ? response.data : []
+                        const transformed = transformFacilityData(facilitiesRaw).filter((f) => f.id !== center.id)
+                        return { centerId: center.id, facilities: transformed }
                     })
+                )
 
-                    const apiFilters = {
-                        ...baseFilters,
-                        latitude: center.latitude,
-                        longitude: center.longitude,
-                        radius: filters.proximity.radius,
-                        unit: filters.proximity.unit,
-                    }
-
-                    // eslint-disable-next-line no-await-in-loop
-                    const response = await facilityApi.getFilteredFacilities(apiFilters)
-
-                    const facilitiesRaw = Array.isArray(response?.data) ? response.data : []
-                    const transformed = transformFacilityData(facilitiesRaw).filter((f) => f.id !== center.id)
-
-                    aggregated = [...aggregated, ...transformed]
-
-                    // Update map for this center
-                    newFacilitiesByCenter[center.id] = transformed
-                }
+                const newFacilitiesByCenter = {}
+                const aggregated = results.flatMap((r) => {
+                    newFacilitiesByCenter[r.centerId] = r.facilities
+                    return r.facilities
+                })
 
                 // Deduplicate by facility id
                 const deduped = Array.from(new Map(aggregated.map((f) => [f.id, f])).values())
@@ -114,7 +132,7 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
         }
 
         loadNearbyFacilities()
-    }, [centers, filters, showAlert])
+    }, [centers, filters, centerSettings, showAlert])
 
     // Default center coordinates (US center)
     const defaultCenter = {
@@ -122,46 +140,7 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
         lng: -98.5795
     }
 
-    const handleProximityToggle = () => {
-        updateFilters({
-            proximity: {
-                ...filters.proximity,
-                enabled: !filters.proximity.enabled,
-                radius: Number(proximityRadius),
-                unit: proximityUnit,
-            },
-        })
-    }
-
-    const commitRadius = () => {
-        const num = Number(proximityRadius)
-        if (isNaN(num) || num < 1 || num > 1000) {
-            showAlert?.({
-                variant: "destructive",
-                title: "Invalid Radius",
-                message: "Please enter a radius between 1 and 1000",
-            })
-            return
-        }
-        updateFilters({
-            proximity: {
-                ...filters.proximity,
-                radius: num,
-            },
-        })
-    }
-
-    const handleUnitChange = (value) => {
-        setProximityUnit(value)
-        if (filters.proximity.enabled) {
-            updateFilters({
-                proximity: {
-                    ...filters.proximity,
-                    unit: value,
-                },
-            })
-        }
-    }
+    // Global toggle and radius/unit management removed; handled per facility via drawer
 
     const handleRetry = () => {
         showConfirm?.({
@@ -185,75 +164,17 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">
-                        Proximity Search: {filters.proximity.radius} {filters.proximity.unit}
+                        Proximity Search
                     </CardTitle>
 
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 bg-transparent"
-                        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                    >
-                        <Settings className="h-4 w-4" />
-                        Settings
-                    </Button>
+
+
                 </div>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {isSettingsOpen && (
-                        <div className="p-4 bg-muted/50 rounded-lg space-y-4">
-                            <div className="flex items-center justify-between p-3 border rounded-lg">
-                                <div>
-                                    <div className="font-medium text-sm">Enable Proximity Search</div>
-                                    <div className="text-xs text-muted-foreground">Show nearby facilities when selecting a location</div>
-                                </div>
-                                <button
-                                    onClick={handleProximityToggle}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${filters.proximity.enabled ? "bg-primary" : "bg-gray-200"
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${filters.proximity.enabled ? "translate-x-6" : "translate-x-1"
-                                            }`}
-                                    />
-                                </button>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label htmlFor="radius" className="text-sm font-medium">
-                                        Search Radius
-                                    </label>
-                                    <input
-                                        id="radius"
-                                        type="number"
-                                        min="1"
-                                        max="1000"
-                                        value={proximityRadius}
-                                        onChange={(e) => setProximityRadius(e.target.value)}
-                                        onBlur={commitRadius}
-                                        className="w-full p-2 border rounded-md text-sm"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label htmlFor="unit" className="text-sm font-medium">
-                                        Unit
-                                    </label>
-                                    <select
-                                        id="unit"
-                                        className="w-full p-2 border rounded-md text-sm"
-                                        value={proximityUnit}
-                                        onChange={(e) => handleUnitChange(e.target.value)}
-                                    >
-                                        <option value="miles">Miles</option>
-                                        <option value="kilometers">Kilometers</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
+                    {/* Selected centers */}
                     {centers && centers.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {centers.map((center) => (
@@ -261,6 +182,11 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                                     key={center.id}
                                     facility={center}
                                     onDeselect={() => onDeselectCenter(center.id)}
+                                    settings={centerSettings[center.id]}
+                                    onSaveSettings={(id, newSettings) => {
+                                        setCenterSettings((prev) => ({ ...prev, [id]: { ...prev[id], ...newSettings } }))
+                                    }}
+                                    showSettings
                                 />
                             ))}
                         </div>
@@ -284,6 +210,7 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                                 proximityCenters={centers}
                                 proximityRadius={filters.proximity.radius}
                                 proximityUnit={filters.proximity.unit}
+                                centerSettings={centerSettings}
                                 showAlert={showAlert}
                                 onRetry={handleRetry}
                             />
@@ -313,7 +240,7 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
 
                                             {list.length === 0 ? (
                                                 <div className="text-center py-4 text-muted-foreground">
-                                                    No other facilities found within {filters.proximity.radius} {filters.proximity.unit}.
+                                                    No other facilities found within {centerSettings[center.id]?.radius ?? filters.proximity.radius} {centerSettings[center.id]?.unit ?? filters.proximity.unit}.
                                                 </div>
                                             ) : (
                                                 <div className="overflow-y-auto ">
@@ -325,7 +252,7 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                                                         onRetry={handleRetry}
                                                         showAlert={showAlert}
                                                         isProximity
-                                                        label={`Facilities within ${filters.proximity.radius} ${filters.proximity.unit} of ${center.name || "selected location"}`}
+                                                        label={`Facilities within ${centerSettings[center.id]?.radius ?? filters.proximity.radius} ${centerSettings[center.id]?.unit ?? filters.proximity.unit} of ${center.name || "selected location"}`}
                                                     />
                                                 </div>
                                             )}
