@@ -5,7 +5,7 @@ import { FacilityCard } from "./FacilityCard.jsx"
 export function FacilityCardList({ facilities, onSelectFacility, selectedFacilityId, loading, error, onRetry, isProximity, showAlert }) {
 	if (loading) {
 		return (
-			<div className="border rounded-lg p-4 h-[500px] flex items-center justify-center">
+			<div className="border rounded-lg p-4 h-[200px] flex items-center justify-center">
 				<div className="text-center">
 					<Loader2 className="h-6 w-6 animate-spin text-primary mx-auto mb-2" />
 					<p className="text-sm text-muted-foreground">Loading facilities...</p>
@@ -16,7 +16,7 @@ export function FacilityCardList({ facilities, onSelectFacility, selectedFacilit
 
 	if (error) {
 		return (
-			<div className="border rounded-lg p-4 h-[500px] flex items-center justify-center">
+			<div className="border rounded-lg p-4 h-[200px] flex items-center justify-center">
 				<div className="text-center">
 					<AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-2" />
 					<p className="text-sm text-red-600 mb-2">{error}</p>
@@ -43,7 +43,7 @@ export function FacilityCardList({ facilities, onSelectFacility, selectedFacilit
 	}
 
 	return (
-		<div className="border rounded-lg p-4 h-[500px] overflow-y-auto">
+		<div className="border rounded-lg p-4 h-[200px] overflow-y-auto">
 			<h3 className="font-medium mb-3">Facilities ({facilities.length})</h3>
 
 			{facilities.length === 0 ? (
@@ -52,7 +52,7 @@ export function FacilityCardList({ facilities, onSelectFacility, selectedFacilit
 					<p>No facilities match your search criteria</p>
 				</div>
 			) : (
-				<div className="space-y-3">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 					{facilities.map((facility) => (
 						<FacilityCard
 							key={facility.id}

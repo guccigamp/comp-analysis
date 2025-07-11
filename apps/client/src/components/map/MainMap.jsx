@@ -67,8 +67,8 @@ export function MainMap({ showAlert, showConfirm }) {
     return (
         <>
             {/* Main grid: map (left) & facility list (right) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-3">
+            <div id="mainmap" className="space-y-4">
+                <div className="">
                     <InteractiveMap
                         facilities={filteredFacilities || []}
                         selectedFacility={selectedFacility}
@@ -78,19 +78,21 @@ export function MainMap({ showAlert, showConfirm }) {
                         onRetry={handleRetry}
                         onMapError={handleMapError}
                         onMarkerClick={handleMarkerClick}
-                        height="500px"
+                        height="600px"
                         showAlert={showAlert}
                     />
                 </div>
-                <FacilityCardList
-                    facilities={filteredFacilities || []}
-                    onSelectFacility={handleSelectFacility}
-                    selectedFacilityId={selectedFacility?.id}
-                    loading={loading}
-                    error={error}
-                    onRetry={handleRetry}
-                    showAlert={showAlert}
-                />
+                <div className="">
+                    <FacilityCardList
+                        facilities={filteredFacilities || []}
+                        onSelectFacility={handleSelectFacility}
+                        selectedFacilityId={selectedFacility?.id}
+                        loading={loading}
+                        error={error}
+                        onRetry={handleRetry}
+                        showAlert={showAlert}
+                    />
+                </div>
             </div>
 
             {/* Always show ProximityMap */}

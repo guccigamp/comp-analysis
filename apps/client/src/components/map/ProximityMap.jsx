@@ -235,37 +235,10 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
 
                     {centerFacility && <FacilityCard facility={centerFacility} />}
 
-                    {/* Grid layout: list (left) | map (right) */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Facilities list */}
-                        <div className="md:col-span-1 order-2 md:order-1">
-                            {!centerFacility ? (
-                                <div className="text-center py-4 text-muted-foreground">
-                                    Select a facility to view nearby locations
-                                </div>
-                            ) : nearbyFacilities.length === 0 ? (
-                                <div className="text-center py-4 text-muted-foreground">
-                                    No other facilities found within {filters.proximity.radius} {filters.proximity.unit}.
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className="overflow-y-auto md:h-[500px]">
-                                        <FacilityCardList
-                                            facilities={nearbyFacilities}
-                                            onSelectFacility={() => { }}
-                                            loading={loading}
-                                            error={error}
-                                            onRetry={handleRetry}
-                                            showAlert={showAlert}
-                                            isProximity
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Proximity map */}
-                        <div className="md:col-span-3 order-1 md:order-2 relative">
+                    {/* Layout: map (top) & facility list (bottom) */}
+                    <div id="proximitymap" className="space-y-4">
+                        {/* Map */}
+                        <div className="relative">
                             <InteractiveMap
                                 facilities={centerFacility ? [centerFacility, ...nearbyFacilities] : []}
                                 center={centerFacility ? {
@@ -293,6 +266,33 @@ export function ProximityMap({ centerFacility, showAlert, showConfirm }) {
                                         <p className="text-muted-foreground">
                                             Choose a facility from the search results to view nearby locations within {filters.proximity.radius} {filters.proximity.unit}.
                                         </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Facilities list */}
+                        <div>
+                            {!centerFacility ? (
+                                <div className="text-center py-4 text-muted-foreground">
+                                    Select a facility to view nearby locations
+                                </div>
+                            ) : nearbyFacilities.length === 0 ? (
+                                <div className="text-center py-4 text-muted-foreground">
+                                    No other facilities found within {filters.proximity.radius} {filters.proximity.unit}.
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="overflow-y-auto md:h-[500px]">
+                                        <FacilityCardList
+                                            facilities={nearbyFacilities}
+                                            onSelectFacility={() => { }}
+                                            loading={loading}
+                                            error={error}
+                                            onRetry={handleRetry}
+                                            showAlert={showAlert}
+                                            isProximity
+                                        />
                                     </div>
                                 </div>
                             )}
