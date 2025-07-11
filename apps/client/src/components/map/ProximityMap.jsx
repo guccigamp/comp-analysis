@@ -13,6 +13,8 @@ import { Settings } from "lucide-react"
 
 export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectCenter = () => { } }) {
     const [nearbyFacilities, setNearbyFacilities] = useState([])
+    // Map of center facility id -> nearby facilities for that center
+    const [nearbyFacilitiesByCenter, setNearbyFacilitiesByCenter] = useState({})
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -58,6 +60,7 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                 }
 
                 let aggregated = []
+                const newFacilitiesByCenter = {}
 
                 for (const center of centers) {
                     // Build the non-proximity filter set
@@ -84,12 +87,16 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                     const transformed = transformFacilityData(facilitiesRaw).filter((f) => f.id !== center.id)
 
                     aggregated = [...aggregated, ...transformed]
+
+                    // Update map for this center
+                    newFacilitiesByCenter[center.id] = transformed
                 }
 
                 // Deduplicate by facility id
                 const deduped = Array.from(new Map(aggregated.map((f) => [f.id, f])).values())
 
                 setNearbyFacilities(deduped)
+                setNearbyFacilitiesByCenter(newFacilitiesByCenter)
                 setError(null)
 
             } catch (err) {
@@ -178,10 +185,9 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">
-                        {centers && centers.length > 0
-                            ? `Facilities within ${filters.proximity.radius} ${filters.proximity.unit} of selected location`
-                            : "Proximity Search"}
+                        Proximity Search: {filters.proximity.radius} {filters.proximity.unit}
                     </CardTitle>
+
                     <Button
                         variant="outline"
                         size="sm"
@@ -248,9 +254,17 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                         </div>
                     )}
 
-                    {centers && centers.length > 0 && centers.map((center) => (
-                        <FacilityCard key={center.id} facility={center} onDeselect={() => onDeselectCenter(center.id)} />
-                    ))}
+                    {centers && centers.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {centers.map((center) => (
+                                <FacilityCard
+                                    key={center.id}
+                                    facility={center}
+                                    onDeselect={() => onDeselectCenter(center.id)}
+                                />
+                            ))}
+                        </div>
+                    )}
 
                     {/* Layout: map (top) & facility list (bottom) */}
                     <div id="proximitymap" className="space-y-4">
@@ -291,24 +305,33 @@ export function ProximityMap({ centers = [], showAlert, showConfirm, onDeselectC
                                 <div className="text-center py-4 text-muted-foreground">
                                     Select a facility to view nearby locations
                                 </div>
-                            ) : nearbyFacilities.length === 0 ? (
-                                <div className="text-center py-4 text-muted-foreground">
-                                    No other facilities found within {filters.proximity.radius} {filters.proximity.unit}.
-                                </div>
                             ) : (
-                                <div>
-                                    <div className="overflow-y-auto md:h-[500px]">
-                                        <FacilityCardList
-                                            facilities={nearbyFacilities}
-                                            onSelectFacility={() => { }}
-                                            loading={loading}
-                                            error={error}
-                                            onRetry={handleRetry}
-                                            showAlert={showAlert}
-                                            isProximity
-                                        />
-                                    </div>
-                                </div>
+                                centers.map((center) => {
+                                    const list = nearbyFacilitiesByCenter[center.id] || []
+                                    return (
+                                        <div key={center.id} className="mt-6 space-y-2">
+
+                                            {list.length === 0 ? (
+                                                <div className="text-center py-4 text-muted-foreground">
+                                                    No other facilities found within {filters.proximity.radius} {filters.proximity.unit}.
+                                                </div>
+                                            ) : (
+                                                <div className="overflow-y-auto ">
+                                                    <FacilityCardList
+                                                        facilities={list}
+                                                        onSelectFacility={() => { }}
+                                                        loading={loading}
+                                                        error={error}
+                                                        onRetry={handleRetry}
+                                                        showAlert={showAlert}
+                                                        isProximity
+                                                        label={`Facilities within ${filters.proximity.radius} ${filters.proximity.unit} of ${center.name || "selected location"}`}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })
                             )}
                         </div>
                     </div>
